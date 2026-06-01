@@ -1,0 +1,108 @@
+:root {
+  /* ========================================
+     PRIMARY BRAND COLORS
+  ======================================== */
+
+  --primary: #6d53a3; /* Main Purple */
+  --primary-dark: #24144f; /* Dark Purple */
+  --primary-light: #f3eeff; /* Soft Purple BG */
+
+  /* ========================================
+     SECONDARY / ACCENT COLORS
+  ======================================== */
+
+  --secondary: #ff5b5c; /* Coral Red Accent */
+  --secondary-light: #ffe9e9;
+
+  --accent-green: #31b978; /* Gradient Green */
+  --accent-pink: #f92596;
+  --accent-blue: #39c0fa;
+
+  /* ========================================
+     GRADIENTS
+  ======================================== */
+
+  --gradient-primary: linear-gradient(90deg, #31b978 0%, #6d53a3 100%);
+
+  --gradient-secondary: linear-gradient(135deg, #6d53a3 0%, #24144f 100%);
+
+  /* ========================================
+     BACKGROUND COLORS
+  ======================================== */
+
+  --bg-main: #ffffff;
+  --bg-light: #f0f4f5;
+  --bg-section: #eaf0f2;
+  --bg-dark: #111822;
+
+  /* ========================================
+     TEXT COLORS
+  ======================================== */
+
+  --text-dark: #181818;
+  --text-medium: #525151;
+  --text-light: #808080;
+  --text-white: #ffffff;
+
+  /* ========================================
+     BORDER COLORS
+  ======================================== */
+
+  --border: #e5e5e5;
+  --border-dark: #282f3a;
+
+  /* ========================================
+     STATUS COLORS
+  ======================================== */
+
+  --success: #3eb75e;
+  --danger: #ff0003;
+  --warning: #ff8f3c;
+  --info: #1ba2db;
+
+  /* ========================================
+     EXTRA UI COLORS
+  ======================================== */
+
+  --extra-purple: #8e56ff;
+  --extra-orange: #f8941f;
+  --extra-indigo: #5866eb;
+
+  /* ========================================
+     COMMON COLORS
+  ======================================== */
+
+  --white: #ffffff;
+  --black: #000000;
+
+  /* ========================================
+     SHADOWS
+  ======================================== */
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  --shadow-md: 0 8px 20px rgba(109, 83, 163, 0.12);
+
+  --shadow-lg: 0 15px 35px rgba(36, 20, 79, 0.18);
+
+  /* ========================================
+     BORDER RADIUS
+  ======================================== */
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 32px;
+
+  /* ========================================
+     TRANSITIONS
+  ======================================== */
+
+  --transition: all 0.3s ease;
+
+  /* ========================================
+     FONT
+  ======================================== */
+
+  --font-main: "Poppins", sans-serif;
+}
