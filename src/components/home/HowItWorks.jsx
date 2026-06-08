@@ -1,4 +1,4 @@
-// HowItWorks.jsx — Smooth scroll, instant step transitions, uncropped illustrations
+// HowItWorks.jsx — Equal-zone scroll, fast plane animation, start/end dot
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -55,7 +55,6 @@ const STEPS = [
 ];
 
 /* ─── CENTER ILLUSTRATIONS ───────────────────────────────────── */
-// viewBox enlarged to 280x280, button moved inside, nothing clipped
 const C_ILLUS = [
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280">
     <defs>
@@ -297,9 +296,8 @@ const SZ = 500;
 const CX = 250;
 const CY = 250;
 const TR = 188;
-const IR = 128; // increased inner radius so illustrations aren't cropped
+const IR = 128;
 const START_ANG = 270;
-// Step 01 at top (270°), then clockwise: 330, 30, 90, 150, 210
 const DOT_ANGS = [270, 330, 30, 90, 150, 210];
 
 function toRad(d) { return d * Math.PI / 180; }
@@ -383,7 +381,6 @@ export default function HowItWorks() {
   const rafRef = useRef(null);
   const animIdRef = useRef(0);
 
-  // Smooth plane animation — faster duration (300ms base) to feel instant
   const animatePlane = useCallback((targetDotIndex, direction, onArrive) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     animIdRef.current++;
@@ -409,8 +406,7 @@ export default function HowItWorks() {
       return;
     }
 
-    // FIXED: much faster animation — 280ms base, minimal multiplier
-    const duration = 280 + travelDist * 0.6;
+    const duration = 220 + travelDist * 0.4;
     const t0 = performance.now();
 
     function tick(now) {
@@ -439,7 +435,8 @@ export default function HowItWorks() {
     const el = scrollRef.current;
     if (!el) return;
 
-    // FIXED: use smooth scroll position mapping — no threshold/delay
+    const N = STEPS.length; // 6
+
     const onScroll = () => {
       const rect = el.getBoundingClientRect();
       const elH = el.offsetHeight;
@@ -448,12 +445,16 @@ export default function HowItWorks() {
       if (scrollH <= 0) return;
 
       const scrolled = Math.max(0, Math.min(-rect.top, scrollH));
-      const ratio = scrolled / scrollH;
+      const ratio = scrolled / scrollH; // 0..1
 
-      // FIXED: use ratio * (STEPS.length - 1) for smooth continuous mapping
-      // Add a small bias so step changes happen slightly before center of range
-      const rawIndex = ratio * STEPS.length;
-      const newActive = Math.min(Math.floor(rawIndex), STEPS.length - 1);
+      // ── EQUAL ZONES ──────────────────────────────────────────
+      // Divide 0..1 into N equal bands of width 1/N each.
+      // Step i is active when ratio is in [ i/N , (i+1)/N ).
+      // The last step (i = N-1) also catches ratio === 1.
+      //
+      // This guarantees every step gets exactly the same scroll
+      // distance — no step is harder or easier to reach than any other.
+      const newActive = Math.min(Math.floor(ratio * N), N - 1);
 
       if (newActive === activeRef.current) return;
       const prev = activeRef.current;
@@ -489,6 +490,8 @@ export default function HowItWorks() {
   const iHref = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(C_ILLUS[active])}`;
   const step = STEPS[active];
   const feats = STEP_FEATURES[active];
+
+  const startDotPt = ptOn(TR, START_ANG);
 
   return (
     <>
@@ -540,8 +543,13 @@ export default function HowItWorks() {
           line-height: 1.8; max-width: 460px; margin: 0 auto;
         }
 
-        /* ── DESKTOP SCROLL ── */
-        .hiw-scroll { height: 700vh; width: 100%; position: relative; }
+        /* ── DESKTOP SCROLL ──
+           600vh total, 6 steps → exactly 100vh per step.
+           One full viewport-height of scroll = one step advance.
+           On a typical laptop trackpad, one "page scroll" gesture ≈ 100vh,
+           so a single deliberate scroll moves exactly one step.
+        ── */
+        .hiw-scroll { height: 600vh; width: 100%; position: relative; }
         .hiw-sticky {
           position: sticky; top: 0; height: 100vh; width: 100%;
           display: flex; align-items: stretch;
@@ -846,7 +854,6 @@ export default function HowItWorks() {
                       <filter id="hDS2" x="-60%" y="-60%" width="220%" height="220%">
                         <feDropShadow dx="0" dy="4" stdDeviation="10" floodColor="rgba(36,20,79,0.28)" />
                       </filter>
-                      {/* FIXED: clip path uses updated IR */}
                       <clipPath id="hIC2">
                         <circle cx={CX} cy={CY} r={IR - 1} />
                       </clipPath>
@@ -875,7 +882,6 @@ export default function HowItWorks() {
                     <circle cx={CX} cy={CY} r={IR}
                       fill="none" stroke="#E8EAF6" strokeWidth="2" />
 
-                    {/* FIXED: image now fills the full inner circle with proper padding */}
                     <image
                       href={iHref}
                       x={CX - IR + 6}
@@ -886,8 +892,41 @@ export default function HowItWorks() {
                       preserveAspectRatio="xMidYMid meet"
                     />
 
+                    {/* ── START/END dot at 270° (top) — drawn before step dots so step-01 sits on top ── */}
+                    <g>
+                      <circle
+                        cx={startDotPt.x}
+                        cy={startDotPt.y}
+                        r={18}
+                        fill="none"
+                        stroke="rgba(49,185,120,0.3)"
+                        strokeWidth="2"
+                      />
+                      <circle
+                        cx={startDotPt.x}
+                        cy={startDotPt.y}
+                        r={10}
+                        fill="url(#hArc2)"
+                        opacity={active === 0 ? 0 : 0.85}
+                        style={{ transition: "opacity 0.3s" }}
+                      />
+                      <text
+                        x={startDotPt.x}
+                        y={startDotPt.y - 26}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize="9"
+                        fontWeight="700"
+                        fontFamily="Poppins,sans-serif"
+                        fill="#6D53A3"
+                        opacity="0.5"
+                        letterSpacing="1.5"
+                      >
+                        START
+                      </text>
+                    </g>
 
-
+                    {/* ── STEP DOTS ── */}
                     {DOT_ANGS.map((ang, i) => {
                       const p = ptOn(TR, ang);
                       const isFilled = i <= filledUpTo;
@@ -929,6 +968,7 @@ export default function HowItWorks() {
                       );
                     })}
 
+                    {/* ── PLANE ── */}
                     <g transform={`translate(${planePt.x},${planePt.y}) rotate(${planeRot})`}>
                       <circle r="22" fill="rgba(36,20,79,0.12)" transform="translate(2,3)" />
                       <circle r="20" fill="white"
