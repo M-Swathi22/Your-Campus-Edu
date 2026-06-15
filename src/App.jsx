@@ -7,10 +7,10 @@ import Footer from "./components/common/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Courses from "./pages/Courses";
-
+import AITools from "./pages/AITools";
 
 function App() {
-  const location = useLocation(); 
+  const location = useLocation();
 
   // ✅ FIX: scroll to top on route change
   useEffect(() => {
@@ -26,18 +26,14 @@ function App() {
       <Navbar />
 
       <Routes>
-
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} /> 
+        <Route path="/about" element={<About />} />
         <Route path="/courses" element={<Courses />} />
-        
-          
+        <Route path="/ai-tools" element={<AITools />} />
       </Routes>
 
       <Footer />
-      
     </>
-
   );
 }
 

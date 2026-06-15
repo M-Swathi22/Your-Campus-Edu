@@ -21,9 +21,11 @@ const NAV_LINKS = [
   { to: "/about",     label: "About"               },
   { to: "/courses",   label: "Courses"             },
   { to: "/countries", label: "Countries"           },
+ 
 ];
 
 const AI_ITEMS = [
+   { to: "/ai-tools", label: "AITools"              },
   { to: "/ai-match",            label: "AI Match",            desc: "Find your ideal university",        Icon: Target,      accent: "#31B978", bg: "rgba(49,185,120,0.12)",  num: "01" },
   { to: "/eligibility-checker", label: "Eligibility Checker", desc: "Check your admission chances",      Icon: CheckCircle, accent: "#6D53A3", bg: "rgba(109,83,163,0.12)", num: "02" },
   { to: "/budget-calculator",   label: "Budget Calculator",   desc: "Plan your education finances",      Icon: Wallet,      accent: "#F8941F", bg: "rgba(248,148,31,0.12)", num: "03" },
