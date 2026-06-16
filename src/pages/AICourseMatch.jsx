@@ -1,180 +1,142 @@
 import { useState, useRef } from "react";
 
-import { courseCategories } from "../data/courses";
-
 import MatchHero from "../components/ai-course-match/MatchHero";
 import MatchForm from "../components/ai-course-match/MatchForm";
 import MatchResult from "../components/ai-course-match/MatchResult";
 import MatchLoading from "../components/ai-course-match/MatchLoading";
 import MatchCTA from "../components/ai-course-match/MatchCTA";
 
-function AICourseMatch() {
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
+import { rankAllCategories } from "../utils/matchEngine";
 
+
+/* ─── Page ─── */
+export default function AICourseMatch() {
+  const [results, setResults] = useState([]);
   const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasResults, setHasResults] = useState(false);
 
   const resultRef = useRef(null);
 
-  const handleGenerateResults = (formData) => {
-    const {
-      careerGoal,
-      stream,
-      favoriteSubject,
-      interestArea,
-      workStyle,
-    } = formData;
-
+  const handleSubmit = async (formData) => {
     setLoading(true);
+    setError(null);
+    setResults([]);
+    setAnalysis(null);
+    setHasResults(false);
 
-    setTimeout(() => {
-      let categoryName = "";
-
-      /* Career Goal */
-
-      switch (careerGoal) {
-        case "Doctor":
-          categoryName = "Medical";
-          break;
-
-        case "Engineer":
-        case "Software Developer":
-        case "Data Scientist":
-          categoryName = "Engineering";
-          break;
-
-        case "Lawyer":
-          categoryName = "Law";
-          break;
-
-        case "Manager":
-        case "Business Owner":
-        case "Entrepreneur":
-          categoryName = "Management";
-          break;
-
-        case "Research Scientist":
-          categoryName = "Allied Health Science";
-          break;
-
-        default:
-          break;
-      }
-
-      /* Undecided Logic */
-
-      if (
-        careerGoal === "Undecided" ||
-        !categoryName
-      ) {
-        if (interestArea === "Healthcare") {
-          categoryName = "Medical";
-        }
-
-        else if (
-          interestArea === "Technology"
-        ) {
-          categoryName = "Engineering";
-        }
-
-        else if (
-          interestArea === "Business"
-        ) {
-          categoryName = "Management";
-        }
-
-        else if (
-          interestArea === "Law"
-        ) {
-          categoryName = "Law";
-        }
-
-        else {
-          categoryName = "Arts & Science";
-        }
-      }
-
-      const category =
-        courseCategories.find(
-          (item) =>
-            item.category === categoryName
-        );
-
-      if (!category) {
-        setResults([]);
-        setLoading(false);
-        return;
-      }
-
-      const confidenceScore =
-        Math.floor(Math.random() * 10) + 88;
-
-      const courses =
-        category.courses.map(
-          (course, index) => ({
-            ...course,
-
-            category:
-              category.category,
-
-            matchPercentage:
-              Math.max(
-                70,
-                confidenceScore -
-                  index * 3
-              ),
-
-            reasons: [
-              careerGoal !==
-              "Undecided"
-                ? `${careerGoal} Career Goal`
-                : `${interestArea} Interest`,
-
-              favoriteSubject,
-
-              workStyle,
-            ].filter(Boolean),
-          })
-        );
+    try {
+      const data = rankAllCategories(formData);
 
       setAnalysis({
-        category:
-          category.category,
-
-        confidence:
-          confidenceScore,
-
-        summary:
-          `Based on your academic profile, interests, and career preferences, ${category.category} appears to be the strongest pathway for your future studies.`,
+        category: data.primary_category,
+        confidence: Math.min(99, Math.max(70, data.confidence ?? 87)),
+        summary: data.summary,
       });
-
-      setResults(courses);
-
+      setResults(data.recommendations || []);
+      setHasResults(true);
+    } catch (err) {
+      console.error("AI match error:", err);
+      setError(
+        err.message?.includes("JSON")
+          ? "AI returned an unexpected format. Please try again."
+          : err.message || "Something went wrong. Please try again."
+      );
+    } finally {
       setLoading(false);
-
       setTimeout(() => {
-        resultRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
-      }, 200);
-    }, 2500);
+        resultRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    }
+  };
+
+  const handleReset = () => {
+    setResults([]);
+    setAnalysis(null);
+    setHasResults(false);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <>
       <MatchHero />
 
-      <MatchForm
-        onSubmit={handleGenerateResults}
-      />
+      {!hasResults && !loading && !error && (
+        <MatchForm onSubmit={handleSubmit} />
+      )}
 
       {loading && <MatchLoading />}
 
       <div ref={resultRef}>
-        {!loading && (
+        {error && !loading && (
+          <section
+            style={{
+              fontFamily: "var(--font-main)",
+              padding: "64px 24px",
+              background: "var(--bg-light)",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: "500px",
+                margin: "0 auto",
+                background: "#fff",
+                border: "1px solid #ffc8c8",
+                borderRadius: "var(--radius-lg)",
+                padding: "36px 40px",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "50%",
+                  background: "#fff1f1",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "16px",
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-dark)", marginBottom: "8px" }}>
+                Something went wrong
+              </h3>
+              <p style={{ color: "var(--text-medium)", fontSize: "14px", marginBottom: "24px", lineHeight: 1.6 }}>
+                {error}
+              </p>
+              <button
+                onClick={handleReset}
+                style={{
+                  padding: "12px 28px",
+                  borderRadius: "var(--radius-md)",
+                  border: "none",
+                  background: "var(--gradient-secondary)",
+                  color: "#fff",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  fontFamily: "var(--font-main)",
+                  cursor: "pointer",
+                }}
+              >
+                Try Again
+              </button>
+            </div>
+          </section>
+        )}
+
+        {!loading && hasResults && (
           <MatchResult
             results={results}
             analysis={analysis}
+            onReset={handleReset}
           />
         )}
       </div>
@@ -183,5 +145,3 @@ function AICourseMatch() {
     </>
   );
 }
-
-export default AICourseMatch;

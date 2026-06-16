@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Menu, X, ChevronDown, UserPlus, Sparkles,
   Target, CheckCircle, Wallet, BarChart2, Globe,
-  ArrowUpRight, Zap,
+  ArrowRight, Zap,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
 
@@ -302,7 +302,6 @@ const styles = `
   .nb__ddHead {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 8px 10px 10px;
     margin-bottom: 4px;
   }
@@ -333,39 +332,6 @@ const styles = `
     color: var(--text-light);
     font-family: var(--font-main);
   }
-
-  /* "View All" pill button in header */
-  .nb__ddAllBtn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 13px;
-    border-radius: 9px;
-    background: var(--gradient-secondary);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: var(--font-main);
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.22s ease;
-    white-space: nowrap;
-    box-shadow: 0 3px 10px rgba(109,83,163,0.25);
-    position: relative;
-    overflow: hidden;
-  }
-  .nb__ddAllBtn::after {
-    content: '';
-    position: absolute;
-    top: -50%; left: -80%; width: 50%; height: 200%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.22), transparent);
-    transform: skewX(-20deg);
-    transition: left 0.4s ease;
-    pointer-events: none;
-  }
-  .nb__ddAllBtn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(109,83,163,0.35); color: #fff; }
-  .nb__ddAllBtn:hover::after { left: 150%; }
 
   .nb__ddDivider {
     height: 1px;
@@ -465,7 +431,7 @@ const styles = `
     line-height: 1.35;
   }
 
-  /* arrow */
+  /* arrow — straight, slides in on hover (no diagonal rotation) */
   .nb__ddArrow {
     display: flex;
     align-items: center;
@@ -479,12 +445,12 @@ const styles = `
     position: relative;
     z-index: 1;
     opacity: 0;
-    transform: rotate(-45deg) scale(0.8);
+    transform: translateX(-4px);
     transition: opacity 0.2s ease, transform 0.24s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease, color 0.2s ease;
   }
   .nb__ddItem:hover .nb__ddArrow {
     opacity: 1;
-    transform: rotate(0deg) scale(1);
+    transform: translateX(0);
     background: rgba(109,83,163,0.09);
     color: var(--primary);
   }
@@ -1077,11 +1043,16 @@ export default function Navbar() {
 
             <span className="nb__sep" aria-hidden="true" />
 
-            {/* AI TOOLS DROPDOWN */}
-            <div className="nb__aiWrap" ref={dropdownRef}>
+            {/* AI TOOLS — click goes straight to /ai-tools, hover reveals the dropdown */}
+            <div
+              className="nb__aiWrap"
+              ref={dropdownRef}
+              onMouseEnter={() => setAiOpen(true)}
+              onMouseLeave={() => setAiOpen(false)}
+            >
               <button
                 className={`nb__aiBtn${isAiActive || aiOpen ? " active" : ""}`}
-                onClick={() => setAiOpen((prev) => !prev)}
+                onClick={() => handleNavTo("/ai-tools")}
                 aria-expanded={aiOpen}
                 aria-haspopup="true"
               >
@@ -1106,13 +1077,6 @@ export default function Navbar() {
                         <div className="nb__ddHeadSub">5 smart tools for your journey</div>
                       </div>
                     </div>
-                    {/* "View All" navigates to /ai-tools */}
-                    <button
-                      className="nb__ddAllBtn"
-                      onClick={() => handleNavTo("/ai-tools")}
-                    >
-                      <Zap size={10} /> View All
-                    </button>
                   </div>
 
                   <div className="nb__ddDivider" />
@@ -1135,7 +1099,7 @@ export default function Navbar() {
                           <span className="nb__ddDesc">{desc}</span>
                         </div>
                         <span className="nb__ddArrow" aria-hidden="true">
-                          <ArrowUpRight size={13} />
+                          <ArrowRight size={13} />
                         </span>
                       </button>
                     ))}
@@ -1157,7 +1121,7 @@ export default function Navbar() {
                       </div>
                     </div>
                     <div className="nb__ddFooterBtn">
-                      <ArrowUpRight size={11} /> Free Session
+                      <ArrowRight size={11} /> Free Session
                     </div>
                   </button>
 
@@ -1249,7 +1213,7 @@ export default function Navbar() {
                   View All AI Tools
                   <span className="nb__mAIViewAllSub">Explore the full AI suite</span>
                 </div>
-                <ArrowUpRight size={14} style={{ color: "var(--primary)", flexShrink: 0 }} />
+                <ArrowRight size={14} style={{ color: "var(--primary)", flexShrink: 0 }} />
               </Link>
 
               {AI_ITEMS.map(({ to, label, desc, Icon, accent, bg }) => (
@@ -1262,7 +1226,7 @@ export default function Navbar() {
                     <span className="nb__mAIName">{label}</span>
                     <span className="nb__mAIDesc">{desc}</span>
                   </div>
-                  <ArrowUpRight size={14} className="nb__mAIArr" />
+                  <ArrowRight size={14} className="nb__mAIArr" />
                 </Link>
               ))}
             </div>

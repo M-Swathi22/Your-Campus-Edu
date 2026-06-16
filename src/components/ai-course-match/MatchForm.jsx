@@ -1,278 +1,511 @@
 import { useState } from "react";
-import { User, BookOpen, Target, Globe, Sparkles } from "lucide-react";
+import { Sparkles, ArrowRight, AlertCircle } from "lucide-react";
 
+/* ─── Data ─── */
+const FORM_STEPS = [
+  {
+    id: "stream",
+    question: "What is your current academic stream?",
+    hint: "This shapes which course families are relevant to you.",
+    required: true,
+    options: [
+      { label: "Science — Biology", value: "Science (Biology)" },
+      { label: "Science — Maths", value: "Science (Maths)" },
+      { label: "Commerce", value: "Commerce" },
+      { label: "Arts & Humanities", value: "Arts & Humanities" },
+      { label: "Diploma / ITI", value: "Diploma / ITI" },
+      { label: "Other / Not Sure", value: "Other" },
+    ],
+  },
+  {
+    id: "careerGoal",
+    question: "What career are you aiming for?",
+    hint: "Choose the closest one — you can refine later.",
+    required: true,
+    options: [
+      { label: "Doctor / Medical Professional", value: "Doctor / Medical professional" },
+      { label: "Engineer / Software Developer", value: "Engineer / Software developer" },
+      { label: "Business Owner / MBA", value: "Business owner / Entrepreneur" },
+      { label: "Lawyer / Legal Professional", value: "Lawyer / Legal professional" },
+      { label: "Researcher / Scientist", value: "Researcher / Scientist" },
+      { label: "Healthcare Support Role", value: "Healthcare support role" },
+      { label: "Not Decided Yet", value: "Not decided yet" },
+    ],
+  },
+  {
+    id: "subject",
+    question: "Which subjects genuinely excite you?",
+    hint: "Pick the one you would study even if it wasn't exam-relevant.",
+    required: true,
+    options: [
+      { label: "Biology & Life Sciences", value: "Biology & Life Sciences" },
+      { label: "Mathematics & Statistics", value: "Mathematics & Statistics" },
+      { label: "Physics", value: "Physics" },
+      { label: "Chemistry", value: "Chemistry" },
+      { label: "Computer Science & Coding", value: "Computer Science & Coding" },
+      { label: "Economics & Finance", value: "Economics & Finance" },
+      { label: "History & Humanities", value: "History & Humanities" },
+      { label: "Creative Arts & Design", value: "Creative Arts & Design" },
+    ],
+  },
+  {
+    id: "workStyle",
+    question: "How do you prefer to work?",
+    hint: "This tells us whether lab-based, desk-based, or people-facing roles suit you.",
+    required: false,
+    options: [
+      { label: "Hands-on — Labs & Fieldwork", value: "Hands-on / Lab & fieldwork" },
+      { label: "Analytical — Problem Solving", value: "Problem-solving & analytical thinking" },
+      { label: "People-Facing — Communication", value: "People & communication focused" },
+      { label: "Creative — Design & Build", value: "Creative & design-oriented" },
+      { label: "Research — Deep Study", value: "Research & deep reading" },
+      { label: "Business — Strategy & Growth", value: "Business & strategy" },
+    ],
+  },
+];
+
+/* ─── Chip component ─── */
+function Chip({ label, selected, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "10px 20px",
+        borderRadius: "100px",
+        border: selected ? "2px solid var(--primary)" : "1.5px solid var(--border)",
+        background: selected ? "var(--primary)" : "#fff",
+        color: selected ? "#fff" : "var(--text-medium)",
+        fontSize: "13px",
+        fontWeight: selected ? 600 : 500,
+        fontFamily: "var(--font-main)",
+        cursor: "pointer",
+        transition: "var(--transition)",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={(e) => {
+        if (!selected) {
+          e.currentTarget.style.borderColor = "var(--primary)";
+          e.currentTarget.style.color = "var(--primary)";
+          e.currentTarget.style.background = "var(--primary-light)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!selected) {
+          e.currentTarget.style.borderColor = "var(--border)";
+          e.currentTarget.style.color = "var(--text-medium)";
+          e.currentTarget.style.background = "#fff";
+        }
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+/* ─── Step indicator ─── */
+function StepDots({ total, current }) {
+  return (
+    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            width: i === current ? "24px" : "8px",
+            height: "8px",
+            borderRadius: "100px",
+            background: i <= current ? "var(--primary)" : "var(--border)",
+            transition: "var(--transition)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main form ─── */
 export default function MatchForm({ onSubmit }) {
-  const [formData, setFormData] = useState({
-    academicLevel: "",
-    stream: "",
-    subject: "",
-    interest: "",
-    careerGoal: "",
-    destination: "",
-  });
+  const [step, setStep] = useState(0);
+  const [selections, setSelections] = useState({});
+  const [extra, setExtra] = useState("");
+  const [error, setError] = useState("");
 
-  const [errors, setErrors] = useState({});
+  const current = FORM_STEPS[step];
+  const isLast = step === FORM_STEPS.length - 1;
+  const isExtraStep = step === FORM_STEPS.length; // textarea step
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [field]: "",
-    }));
+  const handleSelect = (val) => {
+    setSelections((prev) => ({ ...prev, [current.id]: val }));
+    setError("");
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const newErrors = {};
-
-    Object.keys(formData).forEach((key) => {
-      if (!formData[key]) {
-        newErrors[key] = "Required";
-      }
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+  const handleNext = () => {
+    if (current.required && !selections[current.id]) {
+      setError("Please pick an option to continue.");
       return;
     }
-
-    onSubmit(formData);
+    setError("");
+    setStep((s) => s + 1);
   };
 
-  const inputClass = (field) =>
-    `w-full h-14 px-4 rounded-xl bg-white outline-none transition-all
-     ${
-       errors[field]
-         ? "border-2 border-red-500"
-         : "border border-[var(--border)] focus:border-[var(--primary)]"
-     }`;
+  const handleBack = () => {
+    setError("");
+    setStep((s) => s - 1);
+  };
+
+  const handleSubmit = () => {
+    onSubmit({
+      stream: selections.stream,
+      careerGoal: selections.careerGoal,
+      favoriteSubject: selections.subject,
+      workStyle: selections.workStyle || "",
+      interestArea: "",
+      extra,
+    });
+  };
 
   return (
     <section
       id="course-match-form"
-      className="py-24 bg-white"
-      style={{ fontFamily: "var(--font-main)" }}
+      style={{
+        fontFamily: "var(--font-main)",
+        background: "var(--bg-light)",
+        padding: "80px 24px",
+      }}
     >
-      <div className="max-w-5xl mx-auto px-6 lg:px-8">
+      <div style={{ maxWidth: "780px", margin: "0 auto" }}>
 
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary-light)] text-[var(--primary)] text-sm font-semibold mb-5">
-            <Sparkles size={16} />
-            AI Matching Form
+        {/* Section header */}
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "7px",
+              background: "var(--primary-light)",
+              color: "var(--primary)",
+              borderRadius: "100px",
+              padding: "7px 18px",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              marginBottom: "16px",
+            }}
+          >
+            <Sparkles size={14} />
+            Step-by-Step Profile Builder
           </span>
-
-          <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-dark)] mb-4">
-            Tell Us About Yourself
+          <h2
+            style={{
+              fontSize: "clamp(24px,4vw,38px)",
+              fontWeight: 800,
+              color: "var(--text-dark)",
+              lineHeight: 1.2,
+              marginBottom: "12px",
+            }}
+          >
+            Tell Us Who You Are
           </h2>
-
-          <p className="text-lg text-[var(--text-medium)]">
-            Complete all fields to receive personalized course recommendations.
+          <p style={{ fontSize: "15px", color: "var(--text-medium)", maxWidth: "480px", margin: "0 auto" }}>
+            One question at a time. No dropdowns, no guessing — just clear choices.
           </p>
         </div>
 
-        <div className="bg-[var(--bg-light)] border border-[var(--border)] rounded-3xl p-8 lg:p-12 shadow-sm">
+        {/* Card */}
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-xl)",
+            padding: "clamp(28px,5vw,52px)",
+            boxShadow: "var(--shadow-md)",
+          }}
+        >
+          {/* Progress bar */}
+          <div style={{ marginBottom: "36px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <StepDots total={FORM_STEPS.length + 1} current={step} />
+              <span style={{ fontSize: "12px", color: "var(--text-light)", fontWeight: 600 }}>
+                {Math.min(step + 1, FORM_STEPS.length + 1)} / {FORM_STEPS.length + 1}
+              </span>
+            </div>
+            <div
+              style={{
+                height: "4px",
+                borderRadius: "100px",
+                background: "var(--bg-light)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  borderRadius: "100px",
+                  background: "var(--gradient-primary)",
+                  width: `${((step) / (FORM_STEPS.length)) * 100}%`,
+                  transition: "width 0.5s ease",
+                }}
+              />
+            </div>
+          </div>
 
-          <form
-            className="grid md:grid-cols-2 gap-6"
-            onSubmit={handleSubmit}
-          >
-
-            {/* Academic Level */}
+          {/* Question steps */}
+          {!isExtraStep && (
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-[var(--text-dark)] mb-2">
-                <User size={16} />
-                Academic Level
-              </label>
+              <div style={{ marginBottom: "28px" }}>
+                <div
+                  style={{
+                    display: "inline-block",
+                    background: "var(--primary-light)",
+                    color: "var(--primary)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "4px 12px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {current.required ? "Required" : "Optional — helps accuracy"}
+                </div>
+                <h3
+                  style={{
+                    fontSize: "clamp(18px,3vw,24px)",
+                    fontWeight: 700,
+                    color: "var(--text-dark)",
+                    marginBottom: "8px",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {current.question}
+                </h3>
+                <p style={{ fontSize: "13px", color: "var(--text-light)" }}>{current.hint}</p>
+              </div>
 
-              <select
-                value={formData.academicLevel}
-                onChange={(e) =>
-                  handleChange("academicLevel", e.target.value)
-                }
-                className={inputClass("academicLevel")}
-              >
-                <option value="">Select Academic Level</option>
-                <option>High School</option>
-                <option>Diploma</option>
-                <option>Undergraduate</option>
-                <option>Postgraduate</option>
-              </select>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "28px" }}>
+                {current.options.map((opt) => (
+                  <Chip
+                    key={opt.value}
+                    label={opt.label}
+                    selected={selections[current.id] === opt.value}
+                    onClick={() => handleSelect(opt.value)}
+                  />
+                ))}
+              </div>
 
-              {errors.academicLevel && (
-                <p className="text-red-500 text-sm mt-1">
-                  Academic Level is required
-                </p>
+              {error && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "var(--danger)",
+                    fontSize: "13px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <AlertCircle size={15} />
+                  {error}
+                </div>
               )}
-            </div>
 
-            {/* Stream */}
+              <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
+                {step > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    style={{
+                      padding: "13px 24px",
+                      borderRadius: "var(--radius-md)",
+                      border: "1.5px solid var(--border)",
+                      background: "#fff",
+                      color: "var(--text-medium)",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      fontFamily: "var(--font-main)",
+                      cursor: "pointer",
+                      transition: "var(--transition)",
+                    }}
+                  >
+                    ← Back
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={isLast ? () => { if (!current.required || selections[current.id]) { setStep(s=>s+1); setError(""); } else setError("Please pick an option to continue."); } : handleNext}
+                  style={{
+                    flex: 1,
+                    padding: "13px 24px",
+                    borderRadius: "var(--radius-md)",
+                    border: "none",
+                    background: "var(--gradient-secondary)",
+                    color: "#fff",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    fontFamily: "var(--font-main)",
+                    cursor: "pointer",
+                    transition: "var(--transition)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  {isLast ? "One more thing →" : "Continue →"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Extra info + submit step */}
+          {isExtraStep && (
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-[var(--text-dark)] mb-2">
-                <BookOpen size={16} />
-                Study Stream
-              </label>
-
-              <select
-                value={formData.stream}
-                onChange={(e) =>
-                  handleChange("stream", e.target.value)
-                }
-                className={inputClass("stream")}
-              >
-                <option value="">Select Stream</option>
-                <option>Science</option>
-                <option>Commerce</option>
-                <option>Arts</option>
-                <option>Engineering</option>
-                <option>Medical</option>
-              </select>
-
-              {errors.stream && (
-                <p className="text-red-500 text-sm mt-1">
-                  Stream is required
+              <div style={{ marginBottom: "28px" }}>
+                <div
+                  style={{
+                    display: "inline-block",
+                    background: "var(--primary-light)",
+                    color: "var(--primary)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "4px 12px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Optional — but powerful
+                </div>
+                <h3
+                  style={{
+                    fontSize: "clamp(18px,3vw,24px)",
+                    fontWeight: 700,
+                    color: "var(--text-dark)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Anything else the AI should know?
+                </h3>
+                <p style={{ fontSize: "13px", color: "var(--text-light)" }}>
+                  Add your marks, a specific interest, future country preference, or anything unique about you.
                 </p>
-              )}
-            </div>
+              </div>
 
-            {/* Subject */}
-            <div>
-              <label className="text-sm font-semibold text-[var(--text-dark)] mb-2 block">
-                Favorite Subject
-              </label>
+              <textarea
+                value={extra}
+                onChange={(e) => setExtra(e.target.value)}
+                placeholder="e.g. I scored 92% in Biology, I want to work in oncology, I'm open to Tamil Nadu or Kerala colleges…"
+                style={{
+                  width: "100%",
+                  minHeight: "110px",
+                  border: "1.5px solid var(--border)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "14px 16px",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-main)",
+                  color: "var(--text-dark)",
+                  outline: "none",
+                  resize: "vertical",
+                  marginBottom: "24px",
+                  transition: "var(--transition)",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "var(--primary)")}
+                onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
+              />
 
-              <select
-                value={formData.subject}
-                onChange={(e) =>
-                  handleChange("subject", e.target.value)
-                }
-                className={inputClass("subject")}
+              {/* Profile summary */}
+              <div
+                style={{
+                  background: "var(--bg-light)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "16px 20px",
+                  marginBottom: "24px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                }}
               >
-                <option value="">Select Subject</option>
-                <option>Mathematics</option>
-                <option>Physics</option>
-                <option>Chemistry</option>
-                <option>Biology</option>
-                <option>Computer Science</option>
-                <option>Business Studies</option>
-                <option>Psychology</option>
-              </select>
+                <span style={{ fontSize: "12px", color: "var(--text-light)", width: "100%", marginBottom: "4px", fontWeight: 600 }}>
+                  Your profile summary:
+                </span>
+                {Object.entries(selections).map(([k, v]) => (
+                  <span
+                    key={k}
+                    style={{
+                      background: "var(--primary-light)",
+                      color: "var(--primary)",
+                      borderRadius: "100px",
+                      padding: "4px 12px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {v}
+                  </span>
+                ))}
+              </div>
 
-              {errors.subject && (
-                <p className="text-red-500 text-sm mt-1">
-                  Subject is required
-                </p>
-              )}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  style={{
+                    padding: "13px 24px",
+                    borderRadius: "var(--radius-md)",
+                    border: "1.5px solid var(--border)",
+                    background: "#fff",
+                    color: "var(--text-medium)",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    fontFamily: "var(--font-main)",
+                    cursor: "pointer",
+                  }}
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  style={{
+                    flex: 1,
+                    padding: "15px 24px",
+                    borderRadius: "var(--radius-md)",
+                    border: "none",
+                    background: "var(--gradient-primary)",
+                    color: "#fff",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    fontFamily: "var(--font-main)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    boxShadow: "0 8px 24px rgba(49,185,120,0.25)",
+                    transition: "var(--transition)",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  <Sparkles size={17} />
+                  Analyse My Profile with AI
+                  <ArrowRight size={17} />
+                </button>
+              </div>
             </div>
-
-            {/* Interest */}
-            <div>
-              <label className="text-sm font-semibold text-[var(--text-dark)] mb-2 block">
-                Interest Area
-              </label>
-
-              <select
-                value={formData.interest}
-                onChange={(e) =>
-                  handleChange("interest", e.target.value)
-                }
-                className={inputClass("interest")}
-              >
-                <option value="">Select Interest</option>
-                <option>Technology</option>
-                <option>Healthcare</option>
-                <option>Business</option>
-                <option>Finance</option>
-                <option>Design</option>
-                <option>Law</option>
-                <option>Research</option>
-              </select>
-
-              {errors.interest && (
-                <p className="text-red-500 text-sm mt-1">
-                  Interest Area is required
-                </p>
-              )}
-            </div>
-
-            {/* Career Goal */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-[var(--text-dark)] mb-2">
-                <Target size={16} />
-                Career Goal
-              </label>
-
-              <select
-                value={formData.careerGoal}
-                onChange={(e) =>
-                  handleChange("careerGoal", e.target.value)
-                }
-                className={inputClass("careerGoal")}
-              >
-                <option value="">Select Career Goal</option>
-                <option>Engineer</option>
-                <option>Doctor</option>
-                <option>Data Scientist</option>
-                <option>Entrepreneur</option>
-                <option>Lawyer</option>
-                <option>Researcher</option>
-                <option>Manager</option>
-                <option>Undecided</option>
-              </select>
-
-              {errors.careerGoal && (
-                <p className="text-red-500 text-sm mt-1">
-                  Career Goal is required
-                </p>
-              )}
-            </div>
-
-            {/* Destination */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-[var(--text-dark)] mb-2">
-                <Globe size={16} />
-                Preferred Destination
-              </label>
-
-              <select
-                value={formData.destination}
-                onChange={(e) =>
-                  handleChange("destination", e.target.value)
-                }
-                className={inputClass("destination")}
-              >
-                <option value="">Select Destination</option>
-                <option>USA</option>
-                <option>UK</option>
-                <option>Canada</option>
-                <option>Australia</option>
-                <option>Germany</option>
-                <option>Ireland</option>
-                <option>Open to Suggestions</option>
-              </select>
-
-              {errors.destination && (
-                <p className="text-red-500 text-sm mt-1">
-                  Destination is required
-                </p>
-              )}
-            </div>
-
-            <div className="md:col-span-2 pt-4">
-              <button
-                type="submit"
-                className="w-full h-14 rounded-xl bg-[var(--primary)] text-white font-semibold"
-              >
-                Generate AI Recommendations
-              </button>
-            </div>
-
-          </form>
-
+          )}
         </div>
       </div>
     </section>
