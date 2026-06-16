@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Menu, X, ChevronDown, UserPlus, Sparkles,
   Target, CheckCircle, Wallet, BarChart2, Globe,
-  ArrowUpRight,
+  ArrowUpRight, Zap,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
 
@@ -12,7 +12,7 @@ import logo from "../../assets/images/logo.png";
 ========================================= */
 
 const AI_ROUTES = [
-  "/ai-match", "/eligibility-checker",
+  "/ai-tools", "/ai-course-match", "/eligibility-checker",
   "/budget-calculator", "/compare-colleges", "/country-fit-quiz",
 ];
 
@@ -21,16 +21,15 @@ const NAV_LINKS = [
   { to: "/about",     label: "About"               },
   { to: "/courses",   label: "Courses"             },
   { to: "/countries", label: "Countries"           },
- 
 ];
 
+// AI sub-tools only (no /ai-tools page link here — handled separately)
 const AI_ITEMS = [
-   { to: "/ai-tools", label: "AITools"              },
-  { to: "/ai-match",            label: "AI Match",            desc: "Find your ideal university",        Icon: Target,      accent: "#31B978", bg: "rgba(49,185,120,0.12)",  num: "01" },
-  { to: "/eligibility-checker", label: "Eligibility Checker", desc: "Check your admission chances",      Icon: CheckCircle, accent: "#6D53A3", bg: "rgba(109,83,163,0.12)", num: "02" },
-  { to: "/budget-calculator",   label: "Budget Calculator",   desc: "Plan your education finances",      Icon: Wallet,      accent: "#F8941F", bg: "rgba(248,148,31,0.12)", num: "03" },
-  { to: "/compare-colleges",    label: "Compare Colleges",    desc: "Side-by-side university analysis",  Icon: BarChart2,   accent: "#39C0FA", bg: "rgba(57,192,250,0.12)", num: "04" },
-  { to: "/country-fit-quiz",    label: "Country Fit Quiz",    desc: "Discover your best study country",  Icon: Globe,       accent: "#F92596", bg: "rgba(249,37,150,0.12)", num: "05" },
+  { to: "/ai-course-match",            label: "AICourseMatch",            desc: "Find your ideal university",       Icon: Target,      accent: "#31B978", bg: "rgba(49,185,120,0.12)",  num: "01" },
+  { to: "/eligibility-checker", label: "Eligibility Checker", desc: "Check your admission chances",     Icon: CheckCircle, accent: "#6D53A3", bg: "rgba(109,83,163,0.12)", num: "02" },
+  { to: "/budget-calculator",   label: "Budget Calculator",   desc: "Plan your education finances",     Icon: Wallet,      accent: "#F8941F", bg: "rgba(248,148,31,0.12)", num: "03" },
+  { to: "/compare-colleges",    label: "Compare Colleges",    desc: "Side-by-side university analysis", Icon: BarChart2,   accent: "#39C0FA", bg: "rgba(57,192,250,0.12)", num: "04" },
+  { to: "/country-fit-quiz",    label: "Country Fit Quiz",    desc: "Discover your best study country", Icon: Globe,       accent: "#F92596", bg: "rgba(249,37,150,0.12)", num: "05" },
 ];
 
 function getActiveLink(pathname) {
@@ -98,7 +97,6 @@ const styles = `
     transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease;
     overflow: hidden;
   }
-  /* inner shine */
   .nb__logoWrap::before {
     content: '';
     position: absolute;
@@ -108,7 +106,6 @@ const styles = `
     z-index: 1;
     border-radius: 20px;
   }
-  /* spinning ring */
   .nb__logoRing {
     position: absolute;
     inset: -3px;
@@ -174,8 +171,6 @@ const styles = `
     opacity: 1;
   }
   .nb__link:hover, .nb__link.active { color: var(--primary); }
-
-  /* pill indicator */
   .nb__link::after {
     content: '';
     position: absolute;
@@ -286,7 +281,7 @@ const styles = `
     position: absolute;
     top: calc(100% + 14px);
     left: 50%;
-    width: 360px;
+    width: 380px;
     background: #fff;
     border: 1px solid rgba(109,83,163,0.09);
     border-radius: 22px;
@@ -338,27 +333,39 @@ const styles = `
     color: var(--text-light);
     font-family: var(--font-main);
   }
-  .nb__ddFreeBtn {
+
+  /* "View All" pill button in header */
+  .nb__ddAllBtn {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     padding: 6px 13px;
     border-radius: 9px;
-    background: var(--primary-light);
-    color: var(--primary);
+    background: var(--gradient-secondary);
+    color: #fff;
     font-size: 11px;
     font-weight: 700;
     font-family: var(--font-main);
     text-decoration: none;
-    border: 1px solid rgba(109,83,163,0.12);
+    border: none;
+    cursor: pointer;
     transition: all 0.22s ease;
     white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(109,83,163,0.25);
+    position: relative;
+    overflow: hidden;
   }
-  .nb__ddFreeBtn:hover {
-    background: var(--primary);
-    color: #fff;
-    border-color: transparent;
+  .nb__ddAllBtn::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -80%; width: 50%; height: 200%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.22), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.4s ease;
+    pointer-events: none;
   }
+  .nb__ddAllBtn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(109,83,163,0.35); color: #fff; }
+  .nb__ddAllBtn:hover::after { left: 150%; }
 
   .nb__ddDivider {
     height: 1px;
@@ -380,8 +387,8 @@ const styles = `
     overflow: hidden;
     isolation: isolate;
     transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    cursor: pointer;
   }
-  /* fill sweep */
   .nb__ddItem::before {
     content: '';
     position: absolute;
@@ -393,9 +400,9 @@ const styles = `
     z-index: -1;
   }
   .nb__ddItem:hover::before { transform: translateX(0); }
-  .nb__ddItem.active::before { transform: translateX(0); }
+  .nb__ddItem.active::before { transform: translateX(0); background: rgba(109,83,163,0.10); }
 
-  /* left accent */
+  /* left accent bar */
   .nb__ddItem::after {
     content: '';
     position: absolute;
@@ -414,7 +421,7 @@ const styles = `
   .nb__ddItem.active::after { transform: scaleY(1); }
   .nb__ddItem:hover { transform: translateX(4px); }
 
-  /* icon */
+  /* icon box */
   .nb__ddIconBox {
     width: 38px;
     height: 38px;
@@ -482,6 +489,88 @@ const styles = `
     color: var(--primary);
   }
 
+  /* ── DROPDOWN FOOTER ─────────────────────── */
+  .nb__ddFooter {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(109,83,163,0.06) 0%, rgba(49,185,120,0.06) 100%);
+    border: 1px solid rgba(109,83,163,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.24s ease;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .nb__ddFooter::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-secondary);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    z-index: -1;
+    border-radius: 14px;
+  }
+  .nb__ddFooter:hover::before { opacity: 1; }
+  .nb__ddFooterLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nb__ddFooterIcon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--gradient-secondary);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    transition: background 0.24s ease;
+  }
+  .nb__ddFooter:hover .nb__ddFooterIcon { background: rgba(255,255,255,0.20); }
+  .nb__ddFooterTitle {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-family: var(--font-main);
+    transition: color 0.2s ease;
+  }
+  .nb__ddFooterSub {
+    font-size: 10px;
+    color: var(--text-light);
+    font-family: var(--font-main);
+    margin-top: 1px;
+    display: block;
+    transition: color 0.2s ease;
+  }
+  .nb__ddFooter:hover .nb__ddFooterTitle,
+  .nb__ddFooter:hover .nb__ddFooterSub { color: #fff; }
+  .nb__ddFooterBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--gradient-secondary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-main);
+    white-space: nowrap;
+    border: none;
+    pointer-events: none;
+    flex-shrink: 0;
+    transition: background 0.24s ease;
+  }
+  .nb__ddFooter:hover .nb__ddFooterBtn {
+    background: rgba(255,255,255,0.22);
+  }
+
   /* ─── ACTIONS ────────────────────────────── */
   .nb__actions {
     display: flex;
@@ -547,7 +636,6 @@ const styles = `
     transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
     isolation: isolate;
   }
-  /* shimmer */
   .nb__signup::after {
     content: '';
     position: absolute;
@@ -697,9 +785,7 @@ const styles = `
     color: #fff;
     flex-shrink: 0;
   }
-  .nb__mAIToggleText {
-    text-align: left;
-  }
+  .nb__mAIToggleText { text-align: left; }
   .nb__mAIToggleTitle {
     font-size: 13.5px;
     font-weight: 700;
@@ -750,6 +836,43 @@ const styles = `
   }
   .nb__mAIBody.open { display: flex; animation: nbMobileIn 0.22s ease both; }
 
+  /* "View All AI Tools" row inside mobile accordion */
+  .nb__mAIViewAll {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 11px;
+    text-decoration: none;
+    background: linear-gradient(135deg, rgba(109,83,163,0.08) 0%, rgba(49,185,120,0.08) 100%);
+    border: 1px dashed rgba(109,83,163,0.18);
+    margin-bottom: 4px;
+    transition: all 0.22s ease;
+    cursor: pointer;
+  }
+  .nb__mAIViewAll:hover { background: var(--primary-light); border-color: rgba(109,83,163,0.3); }
+  .nb__mAIViewAllIcon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--gradient-secondary);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .nb__mAIViewAllText {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: var(--font-main);
+    flex: 1;
+  }
+  .nb__mAIViewAllSub {
+    display: block;
+    font-size: 10.5px;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+
   .nb__mAIItem {
     display: flex;
     align-items: center;
@@ -762,6 +885,7 @@ const styles = `
     isolation: isolate;
     transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
     background: #fff;
+    cursor: pointer;
   }
   .nb__mAIItem::before {
     content: '';
@@ -876,6 +1000,7 @@ const styles = `
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate  = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [aiOpen, setAiOpen]         = useState(false);
   const [mAiOpen, setMAiOpen]       = useState(false);
@@ -891,6 +1016,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
+  // Close dropdown on outside click
   useEffect(() => {
     const fn = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target))
@@ -900,13 +1026,24 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
+  // Close everything on route change
   useEffect(() => {
     setMobileOpen(false);
     setAiOpen(false);
     setMAiOpen(false);
   }, [location.pathname]);
 
-  const closeAll = () => { setMobileOpen(false); setAiOpen(false); setMAiOpen(false); };
+  const closeAll = () => {
+    setMobileOpen(false);
+    setAiOpen(false);
+    setMAiOpen(false);
+  };
+
+  // Navigate + close dropdown
+  const handleNavTo = (to) => {
+    setAiOpen(false);
+    navigate(to);
+  };
 
   return (
     <>
@@ -944,7 +1081,7 @@ export default function Navbar() {
             <div className="nb__aiWrap" ref={dropdownRef}>
               <button
                 className={`nb__aiBtn${isAiActive || aiOpen ? " active" : ""}`}
-                onClick={() => setAiOpen(!aiOpen)}
+                onClick={() => setAiOpen((prev) => !prev)}
                 aria-expanded={aiOpen}
                 aria-haspopup="true"
               >
@@ -969,23 +1106,26 @@ export default function Navbar() {
                         <div className="nb__ddHeadSub">5 smart tools for your journey</div>
                       </div>
                     </div>
-                    <Link to="/contact" className="nb__ddFreeBtn" onClick={() => setAiOpen(false)}>
-                      <Sparkles size={10} /> Free Session
-                    </Link>
+                    {/* "View All" navigates to /ai-tools */}
+                    <button
+                      className="nb__ddAllBtn"
+                      onClick={() => handleNavTo("/ai-tools")}
+                    >
+                      <Zap size={10} /> View All
+                    </button>
                   </div>
 
                   <div className="nb__ddDivider" />
 
-                  {/* Items */}
+                  {/* Individual tool items */}
                   <div className="nb__ddList">
-                    {AI_ITEMS.map(({ to, label, desc, Icon, accent, bg, num }) => (
-                      <Link
+                    {AI_ITEMS.map(({ to, label, desc, Icon, accent, bg }) => (
+                      <button
                         key={to}
-                        to={to}
                         role="menuitem"
                         className={`nb__ddItem${location.pathname === to ? " active" : ""}`}
-                        style={{ "--item-accent": accent }}
-                        onClick={() => setAiOpen(false)}
+                        style={{ "--item-accent": accent, border: "none", width: "100%", textAlign: "left" }}
+                        onClick={() => handleNavTo(to)}
                       >
                         <div className="nb__ddIconBox" style={{ background: bg }}>
                           <Icon size={18} color={accent} strokeWidth={2} />
@@ -997,9 +1137,29 @@ export default function Navbar() {
                         <span className="nb__ddArrow" aria-hidden="true">
                           <ArrowUpRight size={13} />
                         </span>
-                      </Link>
+                      </button>
                     ))}
                   </div>
+
+                  {/* Footer — Free Counselling CTA */}
+                  <button
+                    className="nb__ddFooter"
+                    onClick={() => handleNavTo("/contact")}
+                    style={{ width: "100%", border: "none", textAlign: "left" }}
+                  >
+                    <div className="nb__ddFooterLeft">
+                      <div className="nb__ddFooterIcon">
+                        <Sparkles size={14} />
+                      </div>
+                      <div>
+                        <div className="nb__ddFooterTitle">Not sure where to start?</div>
+                        <span className="nb__ddFooterSub">Book a free counselling session</span>
+                      </div>
+                    </div>
+                    <div className="nb__ddFooterBtn">
+                      <ArrowUpRight size={11} /> Free Session
+                    </div>
+                  </button>
 
                 </div>
               )}
@@ -1026,7 +1186,7 @@ export default function Navbar() {
           {/* HAMBURGER */}
           <button
             className="nb__menuBtn"
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={() => setMobileOpen((prev) => !prev)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
@@ -1062,7 +1222,7 @@ export default function Navbar() {
 
             <button
               className="nb__mAIToggle"
-              onClick={() => setMAiOpen(!mAiOpen)}
+              onClick={() => setMAiOpen((prev) => !prev)}
               aria-expanded={mAiOpen}
             >
               <div className="nb__mAIToggleLeft">
@@ -1081,6 +1241,17 @@ export default function Navbar() {
             </button>
 
             <div className={`nb__mAIBody${mAiOpen ? " open" : ""}`}>
+
+              {/* View All AI Tools row */}
+              <Link to="/ai-tools" onClick={closeAll} className="nb__mAIViewAll">
+                <div className="nb__mAIViewAllIcon"><Zap size={15} /></div>
+                <div className="nb__mAIViewAllText">
+                  View All AI Tools
+                  <span className="nb__mAIViewAllSub">Explore the full AI suite</span>
+                </div>
+                <ArrowUpRight size={14} style={{ color: "var(--primary)", flexShrink: 0 }} />
+              </Link>
+
               {AI_ITEMS.map(({ to, label, desc, Icon, accent, bg }) => (
                 <Link key={to} to={to} onClick={closeAll}
                   className={`nb__mAIItem${location.pathname === to ? " active" : ""}`}>

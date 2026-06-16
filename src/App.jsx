@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Courses from "./pages/Courses";
 import AITools from "./pages/AITools";
+import AICourseMatch from "./pages/AICourseMatch";
+
 
 function App() {
   const location = useLocation();
@@ -30,6 +32,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/ai-tools" element={<AITools />} />
+        <Route path="/ai-course-match" element={<AICourseMatch />}/>
       </Routes>
 
       <Footer />
