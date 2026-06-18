@@ -1,4 +1,5 @@
-import { RotateCcw, Sparkles, Brain } from "lucide-react";
+import { RotateCcw, Sparkles, Brain, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import RecommendedCourseCard from "./RecommendedCourseCard";
 import MatchProgressBar from "./MatchProgressBar";
 
@@ -116,31 +117,68 @@ export default function MatchResult({ results = [], analysis = null, onReset }) 
         </div>
 
         {/* ── Reset ── */}
-        <div style={{ textAlign: "center" }}>
-          <button
-            onClick={onReset}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "13px 32px",
-              borderRadius: "var(--radius-md)",
-              border: "1.5px solid var(--border)",
-              background: "#fff",
-              color: "var(--text-medium)",
-              fontSize: "14px",
-              fontWeight: 600,
-              fontFamily: "var(--font-main)",
-              cursor: "pointer",
-              transition: "var(--transition)",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-medium)"; }}
-          >
-            <RotateCcw size={15} />
-            Start a new match
-          </button>
-        </div>
+        {/* ── Actions ── */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: "14px",
+    flexWrap: "wrap",
+  }}
+>
+  <button
+    onClick={onReset}
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "13px 32px",
+      borderRadius: "var(--radius-md)",
+      border: "1.5px solid var(--border)",
+      background: "#fff",
+      color: "var(--text-medium)",
+      fontSize: "14px",
+      fontWeight: 600,
+      fontFamily: "var(--font-main)",
+      cursor: "pointer",
+      transition: "var(--transition)",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.borderColor = "var(--primary)";
+      e.currentTarget.style.color = "var(--primary)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.borderColor = "var(--border)";
+      e.currentTarget.style.color = "var(--text-medium)";
+    }}
+  >
+    <RotateCcw size={15} />
+    Start a New Match
+  </button>
+
+  <Link
+    to="/ai-tools/eligibility-checker"
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "13px 32px",
+      borderRadius: "var(--radius-md)",
+      border: "none",
+      background: "var(--gradient-secondary)",
+      color: "#fff",
+      fontSize: "14px",
+      fontWeight: 700,
+      fontFamily: "var(--font-main)",
+      textDecoration: "none",
+      transition: "var(--transition)",
+      boxShadow: "var(--shadow-md)",
+    }}
+  >
+    Check Eligibility
+    <ArrowRight size={15} />
+  </Link>
+</div>
       </div>
 
       <style>{`

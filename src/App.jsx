@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Courses from "./pages/Courses";
 import AITools from "./pages/AITools";
 import AICourseMatch from "./pages/AICourseMatch";
+import EligibilityChecker from "./pages/EligibilityChecker";
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/ai-tools" element={<AITools />} />
         <Route path="/ai-course-match" element={<AICourseMatch />}/>
+        <Route path="/eligibility-checker" element={<EligibilityChecker />}/>
       </Routes>
 
       <Footer />

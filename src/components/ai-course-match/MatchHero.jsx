@@ -1,5 +1,14 @@
 import { useEffect, useRef } from "react";
-import { Sparkles, ArrowRight, Brain, Shield, Zap } from "lucide-react";
+import { Sparkles, ArrowRight, Brain, Shield, Zap, Target } from "lucide-react";
+
+// Swap this for your actual background image (a bright, airy campus / student photo reads best here)
+import heroBg from "../../assets/images/ai-tool.png";
+
+const TRUST_PILLS = [
+  { icon: Brain, text: "Powered by Claude AI", color: "var(--accent-blue)" },
+  { icon: Shield, text: "Personalised, not filtered", color: "var(--accent-green)" },
+  { icon: Zap, text: "Results in 10 seconds", color: "var(--accent-pink)" },
+];
 
 const STATS = [
   { value: "100+", label: "Courses Mapped" },
@@ -7,404 +16,454 @@ const STATS = [
   { value: "AI", label: "Real-Time Match" },
 ];
 
-const TRUST_PILLS = [
-  { icon: Brain, text: "Powered by Claude AI" },
-  { icon: Shield, text: "Personalised, not filtered" },
-  { icon: Zap, text: "Results in 10 seconds" },
-];
+const TOP_MATCH = { code: "MBBS", name: "Bachelor of Medicine & Surgery", pct: 97 };
 
-/* Animated score bar shown in the hero visual */
-function ScoreBar({ label, pct, delay }) {
-  return (
-    <div style={{ marginBottom: "14px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "6px",
-        }}
-      >
-        <span
-          style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "var(--text-dark)",
-          }}
-        >
-          {label}
-        </span>
-        <span
-          style={{
-            fontSize: "13px",
-            fontWeight: 700,
-            color: "var(--primary)",
-          }}
-        >
-          {pct}%
-        </span>
-      </div>
-      <div
-        style={{
-          height: "8px",
-          borderRadius: "100px",
-          background: "var(--bg-light)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          className="hero-bar"
-          style={{
-            height: "100%",
-            borderRadius: "100px",
-            background: "var(--gradient-primary)",
-            width: "0%",
-            transition: `width 1.1s cubic-bezier(.4,0,.2,1) ${delay}ms`,
-          }}
-          data-width={pct}
-        />
-      </div>
-    </div>
-  );
-}
+const RING_RADIUS = 30;
+const RING_CIRC = 2 * Math.PI * RING_RADIUS;
 
 export default function MatchHero() {
-  const barsRef = useRef(null);
+  const ringRef = useRef(null);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!barsRef.current) return;
-      barsRef.current.querySelectorAll(".hero-bar").forEach((el) => {
-        el.style.width = el.dataset.width + "%";
-      });
-    }, 300);
-    return () => clearTimeout(timeout);
+    const t = setTimeout(() => {
+      if (ringRef.current) {
+        const offset = RING_CIRC - (TOP_MATCH.pct / 100) * RING_CIRC;
+        ringRef.current.style.strokeDashoffset = offset;
+      }
+    }, 500);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <section
-      style={{
-        fontFamily: "var(--font-main)",
-        background: "var(--primary-dark)",
-        position: "relative",
-        overflow: "hidden",
-        padding: "72px 24px 80px",
-      }}
-    >
-      {/* Ambient blobs */}
-      <div
-        style={{
-          position: "absolute",
-          top: "-80px",
-          left: "-80px",
-          width: "360px",
-          height: "360px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(109,83,163,0.5) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: "-60px",
-          right: "-60px",
-          width: "300px",
-          height: "300px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(49,185,120,0.3) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
+    <section className="match-hero">
+      <div className="match-hero__media">
+        <div className="match-hero__bg" style={{ backgroundImage: `url(${heroBg})` }} />
+        <div className="match-hero__wash" />
+      </div>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "60px",
-            alignItems: "center",
-          }}
-          className="hero-grid"
-        >
-          {/* LEFT */}
-          <div>
-            {/* Badge */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: "100px",
-                padding: "7px 18px",
-                marginBottom: "28px",
-              }}
-            >
-              <span
-                style={{
-                  width: "7px",
-                  height: "7px",
-                  borderRadius: "50%",
-                  background: "var(--accent-green)",
-                  animation: "heroPulse 2s infinite",
-                  flexShrink: 0,
-                }}
-              />
-              <Sparkles size={14} color="rgba(255,255,255,0.8)" />
-              <span
-                style={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "rgba(255,255,255,0.85)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                AI-Powered Career Guidance
+      <div className="match-hero__inner">
+        <div className="match-hero__eyebrow">
+          <span className="pulse-dot" />
+          <Sparkles size={14} className="match-hero__eyebrow-icon" />
+          AI Course Match Engine
+        </div>
+
+        <h1 className="match-hero__headline">
+          Discover the course
+          <br />
+          <span className="grad-word">built for you</span> — not everyone.
+        </h1>
+
+        <p className="match-hero__sub">
+          Answer a few quick questions about your goals, budget and dream destination.
+          Our AI checks your profile against 100+ courses across 9 career domains and
+          shows exactly where you fit — and why.
+        </p>
+
+        <div className="match-hero__cta-row">
+          <a href="#course-match-form" className="cta-primary">
+            <span>Start My AI Match</span>
+            <ArrowRight size={17} className="cta-primary__arrow" />
+          </a>
+          <a href="/courses" className="cta-secondary">
+            <span>Browse All Courses</span>
+          </a>
+        </div>
+
+        <div className="match-hero__pills">
+          {TRUST_PILLS.map(({ icon: Icon, text, color }) => (
+            <div className="pill" key={text}>
+              <Icon size={13} style={{ color }} />
+              <span>{text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Signature: one unified frosted console — match ring + live stats */}
+        <div className="match-console">
+          <div className="match-console__match">
+            <div className="match-console__ring-wrap">
+              <svg className="match-console__ring" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r={RING_RADIUS} fill="none" stroke="var(--bg-light)" strokeWidth="6" />
+                <circle
+                  ref={ringRef}
+                  cx="36" cy="36" r={RING_RADIUS}
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={RING_CIRC}
+                  strokeDashoffset={RING_CIRC}
+                  transform="rotate(-90 36 36)"
+                  className="match-console__ring-fill"
+                />
+              </svg>
+              <span className="match-console__pct">{TOP_MATCH.pct}%</span>
+            </div>
+
+            <div className="match-console__text">
+              <span className="match-console__label">
+                <Target size={11} />
+                Top AI Match
               </span>
-            </div>
-
-            {/* Headline */}
-            <h1
-              style={{
-                fontSize: "clamp(32px, 4.5vw, 56px)",
-                fontWeight: 800,
-                lineHeight: 1.12,
-                color: "#fff",
-                marginBottom: "20px",
-              }}
-            >
-              Discover the Course
-              <br />
-              <span
-                style={{
-                  background: "var(--gradient-primary)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Built for You
+              <span className="match-console__name">
+                <span className="match-console__code">{TOP_MATCH.code}</span>
+                {TOP_MATCH.name}
               </span>
-              , Not Everyone.
-            </h1>
-
-            <p
-              style={{
-                fontSize: "16px",
-                color: "rgba(255,255,255,0.68)",
-                lineHeight: 1.7,
-                maxWidth: "480px",
-                marginBottom: "36px",
-              }}
-            >
-              Answer a few questions. Our AI analyses your profile against 100+
-              courses across 9 domains — and tells you exactly which ones fit,
-              and why.
-            </p>
-
-            {/* Trust pills */}
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "10px",
-                marginBottom: "40px",
-              }}
-            >
-              {TRUST_PILLS.map(({ icon: Icon, text }) => (
-                <div
-                  key={text}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "7px",
-                    background: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: "100px",
-                    padding: "6px 14px",
-                  }}
-                >
-                  <Icon size={13} color="var(--accent-green)" />
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
-                    {text}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-              <a
-                href="#course-match-form"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "14px 28px",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--gradient-primary)",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: "15px",
-                  textDecoration: "none",
-                  transition: "var(--transition)",
-                  boxShadow: "0 8px 24px rgba(49,185,120,0.3)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
-              >
-                Start My AI Match
-                <ArrowRight size={17} />
-              </a>
-
-              <a
-                href="/courses"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "14px 28px",
-                  borderRadius: "var(--radius-md)",
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.22)",
-                  color: "rgba(255,255,255,0.85)",
-                  fontWeight: 600,
-                  fontSize: "15px",
-                  textDecoration: "none",
-                  transition: "var(--transition)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                Browse All Courses
-              </a>
-            </div>
-
-            {/* Stats */}
-            <div
-              style={{
-                display: "flex",
-                gap: "36px",
-                marginTop: "48px",
-                paddingTop: "32px",
-                borderTop: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              {STATS.map(({ value, label }) => (
-                <div key={label}>
-                  <div
-                    style={{
-                      fontSize: "26px",
-                      fontWeight: 800,
-                      background: "var(--gradient-primary)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    {value}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.55)", fontWeight: 500, marginTop: "2px" }}>
-                    {label}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
-          {/* RIGHT — live preview card */}
-          <div ref={barsRef}>
-            <div
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "var(--radius-xl)",
-                padding: "32px",
-                backdropFilter: "blur(12px)",
-              }}
-            >
-              {/* Card header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "24px",
-                  paddingBottom: "20px",
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    borderRadius: "var(--radius-sm)",
-                    background: "var(--gradient-primary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Brain size={22} color="#fff" />
-                </div>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>
-                    AI Match Preview
-                  </div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-                    Science (Biology) · Doctor · Research
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginLeft: "auto",
-                    background: "rgba(49,185,120,0.15)",
-                    border: "1px solid rgba(49,185,120,0.3)",
-                    borderRadius: "100px",
-                    padding: "4px 12px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "var(--accent-green)",
-                  }}
-                >
-                  Live
-                </div>
+          <div className="match-console__stats">
+            {STATS.map(({ value, label }) => (
+              <div className="match-console__stat" key={label}>
+                <div className="match-console__value">{value}</div>
+                <div className="match-console__statlabel">{label}</div>
               </div>
-
-              <ScoreBar label="MBBS" pct={97} delay={300} />
-              <ScoreBar label="BDS" pct={84} delay={450} />
-              <ScoreBar label="B.Sc Nursing" pct={79} delay={600} />
-              <ScoreBar label="BAMS" pct={74} delay={750} />
-              <ScoreBar label="B.Sc Medical Lab Technology" pct={68} delay={900} />
-
-              {/* Footer note */}
-              <div
-                style={{
-                  marginTop: "20px",
-                  paddingTop: "18px",
-                  borderTop: "1px solid rgba(255,255,255,0.08)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <Sparkles size={13} color="rgba(255,255,255,0.4)" />
-                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
-                  Match scores are personalised by AI — not a filter
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes heroPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-        @media(max-width:768px){
-          .hero-grid{ grid-template-columns:1fr !important; gap:40px !important; }
+        .match-hero {
+          position: relative;
+          font-family: var(--font-main);
+          color: var(--text-dark);
+          padding: 110px 24px 96px;
+          overflow: visible;
+          background: var(--bg-section);
+          isolation: isolate;
+        }
+
+        .match-hero__media {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        }
+
+        .match-hero__bg {
+          position: absolute;
+          inset: 0;
+          background-size: cover;
+          background-position: center;
+          filter: grayscale(4%) brightness(1.02);
+          transform: scale(1.02);
+        }
+
+        .match-hero__wash {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(
+              135deg,
+              color-mix(in srgb, var(--primary-light) 68%, transparent) 0%,
+              color-mix(in srgb, var(--bg-section) 58%, transparent) 50%,
+              color-mix(in srgb, var(--white) 48%, transparent) 100%
+            ),
+            radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--accent-blue) 14%, transparent) 0%, transparent 50%);
+        }
+
+        .match-hero__inner {
+          position: relative;
+          z-index: 2;
+          max-width: 720px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .match-hero__eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: color-mix(in srgb, var(--white) 62%, transparent);
+          border: 1px solid var(--border);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-radius: 100px;
+          padding: 8px 18px;
+          margin-bottom: 26px;
+          color: var(--primary-dark);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          animation: heroFadeUp 0.7s ease both;
+        }
+
+        .match-hero__eyebrow-icon { color: var(--secondary); }
+
+        .match-hero__headline {
+          font-size: clamp(34px, 4.8vw, 56px);
+          font-weight: 800;
+          line-height: 1.14;
+          letter-spacing: -0.01em;
+          color: var(--primary-dark);
+          margin-bottom: 20px;
+          animation: heroFadeUp 0.7s ease 0.05s both;
+        }
+
+        .grad-word {
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .match-hero__sub {
+          font-size: 16px;
+          line-height: 1.75;
+          color: var(--text-medium);
+          max-width: 520px;
+          margin: 0 auto 32px;
+          animation: heroFadeUp 0.7s ease 0.1s both;
+        }
+
+        .match-hero__cta-row {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 28px;
+          animation: heroFadeUp 0.7s ease 0.15s both;
+        }
+
+        .cta-primary, .cta-secondary {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 15px 30px;
+          border-radius: 100px;
+          font-weight: 700;
+          font-size: 0.92rem;
+          letter-spacing: 0.01em;
+          text-decoration: none;
+          transition: var(--transition);
+        }
+
+        .cta-primary {
+          background: var(--primary-dark);
+          color: var(--white);
+          box-shadow: var(--shadow-md);
+        }
+
+        .cta-primary:hover {
+          background: var(--primary);
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .cta-primary__arrow { transition: transform 0.25s ease; }
+        .cta-primary:hover .cta-primary__arrow { transform: translateX(3px); }
+
+        .cta-secondary {
+          background: color-mix(in srgb, var(--white) 70%, transparent);
+          border: 1px solid var(--border);
+          color: var(--primary-dark);
+          backdrop-filter: blur(8px);
+        }
+
+        .cta-secondary:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          transform: translateY(-3px);
+        }
+
+        .match-hero__pills {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 44px;
+          animation: heroFadeUp 0.7s ease 0.2s both;
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: color-mix(in srgb, var(--white) 55%, transparent);
+          border: 1px solid var(--border);
+          backdrop-filter: blur(6px);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--text-medium);
+        }
+
+        .pill svg { flex-shrink: 0; }
+
+        .pulse-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--accent-green);
+          animation: matchPulse 2s infinite;
+          flex-shrink: 0;
+        }
+
+        @keyframes matchPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        /* ===== Signature: unified frosted console ===== */
+
+        .match-console {
+          width: 100%;
+          max-width: 640px;
+          display: flex;
+          align-items: center;
+          gap: 28px;
+          background: color-mix(in srgb, var(--white) 82%, transparent);
+          border: 1px solid color-mix(in srgb, var(--white) 90%, transparent);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border-radius: var(--radius-xl);
+          box-shadow:
+            0 20px 60px color-mix(in srgb, var(--primary-dark) 18%, transparent),
+            0 8px 24px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+          padding: 26px 32px;
+          animation: heroFadeUp 0.7s ease 0.3s both;
+        }
+
+        .match-console__match {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          flex-shrink: 0;
+          padding-right: 26px;
+          border-right: 1px solid var(--border);
+        }
+
+        .match-console__ring-wrap {
+          position: relative;
+          width: 64px;
+          height: 64px;
+          flex-shrink: 0;
+        }
+
+        .match-console__ring { width: 100%; height: 100%; }
+
+        .match-console__ring-fill {
+          transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+        }
+
+        .match-console__pct {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          font-weight: 800;
+          color: var(--primary-dark);
+        }
+
+        .match-console__text {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          text-align: left;
+        }
+
+        .match-console__label {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--accent-green);
+        }
+
+        .match-console__name {
+          font-size: 12px;
+          color: var(--text-medium);
+          line-height: 1.4;
+        }
+
+        .match-console__code {
+          display: inline-block;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.03em;
+          color: var(--primary);
+          background: var(--primary-light);
+          border-radius: var(--radius-sm);
+          padding: 2px 7px;
+          margin-right: 7px;
+        }
+
+        .match-console__stats {
+          display: flex;
+          flex: 1;
+        }
+
+        .match-console__stat {
+          flex: 1;
+          text-align: center;
+          padding: 0 10px;
+        }
+
+        .match-console__stat:not(:first-child) {
+          border-left: 1px solid var(--border);
+        }
+
+        .match-console__value {
+          font-size: 22px;
+          font-weight: 800;
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .match-console__statlabel {
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--text-light);
+          margin-top: 3px;
+        }
+
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 640px) {
+          .match-hero { padding: 84px 18px 70px; }
+
+          .match-console {
+            flex-direction: column;
+            gap: 20px;
+            padding: 24px 22px;
+          }
+
+          .match-console__match {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid var(--border);
+            padding-right: 0;
+            padding-bottom: 18px;
+            justify-content: center;
+          }
+
+          .match-console__stats { width: 100%; }
+
+          .cta-primary, .cta-secondary { justify-content: center; width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .match-hero__eyebrow, .match-hero__headline, .match-hero__sub,
+          .match-hero__cta-row, .match-hero__pills, .match-console {
+            animation: none; opacity: 1; transform: none;
+          }
+          .pulse-dot { animation: none; }
+          .cta-primary:hover, .cta-secondary:hover { transform: none; }
+          .match-console__ring-fill { transition: none; }
         }
       `}</style>
     </section>
