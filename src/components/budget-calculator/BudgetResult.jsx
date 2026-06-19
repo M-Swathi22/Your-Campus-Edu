@@ -1,4 +1,13 @@
-import { RotateCcw, Sparkles, TrendingUp, BookOpen, CreditCard } from "lucide-react";
+import {
+  RotateCcw,
+  Sparkles,
+  TrendingUp,
+  BookOpen,
+  CreditCard,
+  ArrowRight,
+} from "lucide-react";
+
+import { Link } from "react-router-dom";
 import { BudgetSummaryCard, CostBreakdown, DestinationCard, CollegeCard } from "./BudgetSubComponents";
 
 function fmtNum(n) { return Number(n || 0).toLocaleString("en-IN"); }
@@ -138,15 +147,72 @@ export default function BudgetResult({ result = null, onReset }) {
           </div>
         )}
 
-        {/* ── Reset ── */}
-        <div style={{ textAlign: "center" }}>
-          <button onClick={onReset}
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "13px 32px", borderRadius: "var(--radius-md)", border: "1.5px solid var(--border)", background: "#fff", color: "var(--text-medium)", fontSize: "14px", fontWeight: 600, fontFamily: "var(--font-main)", cursor: "pointer", transition: "var(--transition)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-medium)"; }}>
-            <RotateCcw size={15} /> Plan a different budget
-          </button>
-        </div>
+       
+        {/* ── Actions ── */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: "14px",
+    flexWrap: "wrap",
+  }}
+>
+  {/* Compare Colleges */}
+  <Link
+    to="/compare-colleges"
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "13px 32px",
+      borderRadius: "var(--radius-md)",
+      border: "none",
+      background: "var(--gradient-secondary)",
+      color: "#fff",
+      fontSize: "14px",
+      fontWeight: 700,
+      fontFamily: "var(--font-main)",
+      textDecoration: "none",
+      cursor: "pointer",
+      transition: "var(--transition)",
+      boxShadow: "var(--shadow-md)",
+    }}
+  >
+    <ArrowRight size={15} />
+    Compare Colleges
+  </Link>
+
+  {/* Reset */}
+  <button
+    onClick={onReset}
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "13px 32px",
+      borderRadius: "var(--radius-md)",
+      border: "1.5px solid var(--border)",
+      background: "#fff",
+      color: "var(--text-medium)",
+      fontSize: "14px",
+      fontWeight: 600,
+      fontFamily: "var(--font-main)",
+      cursor: "pointer",
+      transition: "var(--transition)",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.borderColor = "var(--primary)";
+      e.currentTarget.style.color = "var(--primary)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.borderColor = "var(--border)";
+      e.currentTarget.style.color = "var(--text-medium)";
+    }}
+  >
+    <RotateCcw size={15} />
+    Calculate Another Budget
+  </button>
+</div>
       </div>
 
       <style>{`@media(max-width:768px){ .result-2col{ grid-template-columns:1fr !important; } }`}</style>

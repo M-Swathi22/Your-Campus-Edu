@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Menu, X, ChevronDown, UserPlus, Sparkles,
@@ -31,6 +31,10 @@ const AI_ITEMS = [
   { to: "/compare-colleges",    label: "Compare Colleges",    desc: "Side-by-side university analysis", Icon: BarChart2,   accent: "#39C0FA", bg: "rgba(57,192,250,0.12)", num: "04" },
   { to: "/country-fit-quiz",    label: "Country Fit Quiz",    desc: "Discover your best study country", Icon: Globe,       accent: "#F92596", bg: "rgba(249,37,150,0.12)", num: "05" },
 ];
+
+// Hover-intent timing — tuned for natural mouse movement
+const OPEN_DELAY  = 60;   // ms before opening on enter (avoids accidental flicks)
+const CLOSE_DELAY = 220;  // ms before closing on leave (survives the gap + diagonal moves)
 
 function getActiveLink(pathname) {
   if (AI_ROUTES.includes(pathname)) return "__ai__";
@@ -197,7 +201,13 @@ const styles = `
   }
 
   /* ─── AI TRIGGER ─────────────────────────── */
-  .nb__aiWrap { position: relative; }
+  .nb__aiWrap {
+    position: relative;
+    /* invisible padding bridge so the cursor never "leaves" between
+       the button and the dropdown panel below it */
+    padding-bottom: 14px;
+    margin-bottom: -14px;
+  }
 
   .nb__aiBtn {
     position: relative;
@@ -291,11 +301,25 @@ const styles = `
       0 8px 20px rgba(36,20,79,0.07),
       0 24px 56px rgba(36,20,79,0.11);
     transform-origin: top center;
-    animation: nbDropIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
+    /* default (closing) state — JS toggles .nb__dropdown--open */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(-8px) scale(0.96);
+    transition:
+      opacity 0.18s ease,
+      transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+      visibility 0s linear 0.22s;
   }
-  @keyframes nbDropIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.95); }
-    to   { opacity: 1; transform: translateX(-50%) translateY(0)      scale(1);    }
+  .nb__dropdown.nb__dropdown--open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0) scale(1);
+    transition:
+      opacity 0.2s ease,
+      transform 0.26s cubic-bezier(0.34,1.56,0.64,1),
+      visibility 0s linear 0s;
   }
 
   /* dropdown header strip */
@@ -973,6 +997,9 @@ export default function Navbar() {
   const [scrolled, setScrolled]     = useState(false);
 
   const dropdownRef = useRef(null);
+  const openTimer    = useRef(null);
+  const closeTimer   = useRef(null);
+
   const activeLink  = getActiveLink(location.pathname);
   const isAiActive  = activeLink === "__ai__";
 
@@ -982,33 +1009,81 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // Close dropdown on outside click
+  // Clear any pending timers — call before scheduling a new state change
+  const clearTimers = useCallback(() => {
+    if (openTimer.current)  { clearTimeout(openTimer.current);  openTimer.current  = null; }
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+  }, []);
+
+  // Hover-intent: open after a short delay, cancel any pending close
+  const scheduleOpen = useCallback(() => {
+    clearTimers();
+    openTimer.current = setTimeout(() => setAiOpen(true), OPEN_DELAY);
+  }, [clearTimers]);
+
+  // Hover-intent: close after a longer delay so re-entering (button <-> panel,
+  // including the gap between them) cancels it cleanly
+  const scheduleClose = useCallback(() => {
+    clearTimers();
+    closeTimer.current = setTimeout(() => setAiOpen(false), CLOSE_DELAY);
+  }, [clearTimers]);
+
+  const closeImmediately = useCallback(() => {
+    clearTimers();
+    setAiOpen(false);
+  }, [clearTimers]);
+
+  // Close dropdown on outside click (immediate — no delay needed here)
   useEffect(() => {
     const fn = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setAiOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        closeImmediately();
+      }
     };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
-  }, []);
+  }, [closeImmediately]);
+
+  // Close on Escape for accessibility
+  useEffect(() => {
+    const fn = (e) => {
+      if (e.key === "Escape") closeImmediately();
+    };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
+  }, [closeImmediately]);
 
   // Close everything on route change
   useEffect(() => {
     setMobileOpen(false);
-    setAiOpen(false);
+    closeImmediately();
     setMAiOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, closeImmediately]);
+
+  // Cleanup timers on unmount
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
   const closeAll = () => {
     setMobileOpen(false);
-    setAiOpen(false);
+    closeImmediately();
     setMAiOpen(false);
   };
 
   // Navigate + close dropdown
   const handleNavTo = (to) => {
-    setAiOpen(false);
+    closeImmediately();
     navigate(to);
+  };
+
+  // Click toggles immediately (no delay) — clicking should always feel instant
+  const handleTriggerClick = () => {
+    clearTimers();
+    if (aiOpen) {
+      setAiOpen(false);
+    } else {
+      setAiOpen(true);
+      navigate("/ai-tools");
+    }
   };
 
   return (
@@ -1043,16 +1118,17 @@ export default function Navbar() {
 
             <span className="nb__sep" aria-hidden="true" />
 
-            {/* AI TOOLS — click goes straight to /ai-tools, hover reveals the dropdown */}
+            {/* AI TOOLS — click goes straight to /ai-tools, hover reveals the dropdown
+                with debounced open/close so it never flickers on diagonal mouse moves */}
             <div
               className="nb__aiWrap"
               ref={dropdownRef}
-              onMouseEnter={() => setAiOpen(true)}
-              onMouseLeave={() => setAiOpen(false)}
+              onMouseEnter={scheduleOpen}
+              onMouseLeave={scheduleClose}
             >
               <button
                 className={`nb__aiBtn${isAiActive || aiOpen ? " active" : ""}`}
-                onClick={() => handleNavTo("/ai-tools")}
+                onClick={handleTriggerClick}
                 aria-expanded={aiOpen}
                 aria-haspopup="true"
               >
@@ -1063,70 +1139,73 @@ export default function Navbar() {
                   aria-hidden="true" />
               </button>
 
-              {aiOpen && (
-                <div className="nb__dropdown" role="menu">
+              <div
+                className={`nb__dropdown${aiOpen ? " nb__dropdown--open" : ""}`}
+                role="menu"
+                onMouseEnter={scheduleOpen}
+                onMouseLeave={scheduleClose}
+              >
 
-                  {/* Header */}
-                  <div className="nb__ddHead">
-                    <div className="nb__ddHeadLeft">
-                      <div className="nb__ddHeadIcon">
-                        <Sparkles size={14} />
-                      </div>
-                      <div>
-                        <div className="nb__ddHeadTitle">AI-Powered Tools</div>
-                        <div className="nb__ddHeadSub">5 smart tools for your journey</div>
-                      </div>
+                {/* Header */}
+                <div className="nb__ddHead">
+                  <div className="nb__ddHeadLeft">
+                    <div className="nb__ddHeadIcon">
+                      <Sparkles size={14} />
+                    </div>
+                    <div>
+                      <div className="nb__ddHeadTitle">AI-Powered Tools</div>
+                      <div className="nb__ddHeadSub">5 smart tools for your journey</div>
                     </div>
                   </div>
-
-                  <div className="nb__ddDivider" />
-
-                  {/* Individual tool items */}
-                  <div className="nb__ddList">
-                    {AI_ITEMS.map(({ to, label, desc, Icon, accent, bg }) => (
-                      <button
-                        key={to}
-                        role="menuitem"
-                        className={`nb__ddItem${location.pathname === to ? " active" : ""}`}
-                        style={{ "--item-accent": accent, border: "none", width: "100%", textAlign: "left" }}
-                        onClick={() => handleNavTo(to)}
-                      >
-                        <div className="nb__ddIconBox" style={{ background: bg }}>
-                          <Icon size={18} color={accent} strokeWidth={2} />
-                        </div>
-                        <div className="nb__ddContent">
-                          <span className="nb__ddLabel">{label}</span>
-                          <span className="nb__ddDesc">{desc}</span>
-                        </div>
-                        <span className="nb__ddArrow" aria-hidden="true">
-                          <ArrowRight size={13} />
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Footer — Free Counselling CTA */}
-                  <button
-                    className="nb__ddFooter"
-                    onClick={() => handleNavTo("/contact")}
-                    style={{ width: "100%", border: "none", textAlign: "left" }}
-                  >
-                    <div className="nb__ddFooterLeft">
-                      <div className="nb__ddFooterIcon">
-                        <Sparkles size={14} />
-                      </div>
-                      <div>
-                        <div className="nb__ddFooterTitle">Not sure where to start?</div>
-                        <span className="nb__ddFooterSub">Book a free counselling session</span>
-                      </div>
-                    </div>
-                    <div className="nb__ddFooterBtn">
-                      <ArrowRight size={11} /> Free Session
-                    </div>
-                  </button>
-
                 </div>
-              )}
+
+                <div className="nb__ddDivider" />
+
+                {/* Individual tool items */}
+                <div className="nb__ddList">
+                  {AI_ITEMS.map(({ to, label, desc, Icon, accent, bg }) => (
+                    <button
+                      key={to}
+                      role="menuitem"
+                      className={`nb__ddItem${location.pathname === to ? " active" : ""}`}
+                      style={{ "--item-accent": accent, border: "none", width: "100%", textAlign: "left" }}
+                      onClick={() => handleNavTo(to)}
+                    >
+                      <div className="nb__ddIconBox" style={{ background: bg }}>
+                        <Icon size={18} color={accent} strokeWidth={2} />
+                      </div>
+                      <div className="nb__ddContent">
+                        <span className="nb__ddLabel">{label}</span>
+                        <span className="nb__ddDesc">{desc}</span>
+                      </div>
+                      <span className="nb__ddArrow" aria-hidden="true">
+                        <ArrowRight size={13} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Footer — Free Counselling CTA */}
+                <button
+                  className="nb__ddFooter"
+                  onClick={() => handleNavTo("/contact")}
+                  style={{ width: "100%", border: "none", textAlign: "left" }}
+                >
+                  <div className="nb__ddFooterLeft">
+                    <div className="nb__ddFooterIcon">
+                      <Sparkles size={14} />
+                    </div>
+                    <div>
+                      <div className="nb__ddFooterTitle">Not sure where to start?</div>
+                      <span className="nb__ddFooterSub">Book a free counselling session</span>
+                    </div>
+                  </div>
+                  <div className="nb__ddFooterBtn">
+                    <ArrowRight size={11} /> Free Session
+                  </div>
+                </button>
+
+              </div>
             </div>
 
             <span className="nb__sep" aria-hidden="true" />

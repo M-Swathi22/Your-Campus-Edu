@@ -157,7 +157,7 @@ export default function MatchResult({ results = [], analysis = null, onReset }) 
   </button>
 
   <Link
-    to="/ai-tools/eligibility-checker"
+    to="/eligibility-checker"
     style={{
       display: "inline-flex",
       alignItems: "center",

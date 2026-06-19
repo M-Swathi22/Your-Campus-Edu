@@ -272,7 +272,7 @@ export default function EligibilityResult({ result = null, formType = "domestic"
 >
   {/* Budget Calculator */}
  <Link
-  to="/ai-tools/budget-calculator"
+  to="/budget-calculator"
   style={{
     display: "inline-flex",
     alignItems: "center",
