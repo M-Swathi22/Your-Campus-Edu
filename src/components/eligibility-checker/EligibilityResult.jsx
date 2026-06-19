@@ -1,4 +1,5 @@
 import { RotateCcw, Sparkles, CheckCircle, AlertTriangle, XCircle, ArrowRight, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 /* ─── Verdict config ─── */
 const VERDICT_CONFIG = {
@@ -260,18 +261,71 @@ export default function EligibilityResult({ result = null, formType = "domestic"
           </div>
         )}
 
-        {/* ── Reset ── */}
-        <div style={{ textAlign: "center" }}>
-          <button
-            onClick={onReset}
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "13px 32px", borderRadius: "var(--radius-md)", border: "1.5px solid var(--border)", background: "#fff", color: "var(--text-medium)", fontSize: "14px", fontWeight: 600, fontFamily: "var(--font-main)", cursor: "pointer", transition: "var(--transition)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-medium)"; }}
-          >
-            <RotateCcw size={15} />
-            Check another eligibility
-          </button>
-        </div>
+        {/* ── Actions ── */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: "14px",
+    flexWrap: "wrap",
+  }}
+>
+  {/* Budget Calculator */}
+ <Link
+  to="/ai-tools/budget-calculator"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "13px 32px",
+    borderRadius: "var(--radius-md)",
+    border: "none",
+    background: "var(--gradient-secondary)",
+    color: "#fff",
+    fontSize: "14px",
+    fontWeight: 700,
+    fontFamily: "var(--font-main)",
+    textDecoration: "none",
+    cursor: "pointer",
+    transition: "var(--transition)",
+    boxShadow: "var(--shadow-md)",
+  }}
+>
+  <ArrowRight size={15} />
+  Calculate My Budget
+</Link>
+
+  {/* Reset */}
+  <button
+    onClick={onReset}
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "13px 32px",
+      borderRadius: "var(--radius-md)",
+      border: "1.5px solid var(--border)",
+      background: "#fff",
+      color: "var(--text-medium)",
+      fontSize: "14px",
+      fontWeight: 600,
+      fontFamily: "var(--font-main)",
+      cursor: "pointer",
+      transition: "var(--transition)",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.borderColor = "var(--primary)";
+      e.currentTarget.style.color = "var(--primary)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.borderColor = "var(--border)";
+      e.currentTarget.style.color = "var(--text-medium)";
+    }}
+  >
+    <RotateCcw size={15} />
+    Check Another Eligibility
+  </button>
+</div>
       </div>
 
       <style>{`
