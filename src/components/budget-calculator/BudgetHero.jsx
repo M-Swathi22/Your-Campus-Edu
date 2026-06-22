@@ -1,171 +1,539 @@
-import { useEffect, useRef } from "react";
-import { Sparkles, ArrowRight, Brain, Shield, Zap, DollarSign } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Wallet, Shield, Zap, IndianRupee, PiggyBank } from "lucide-react";
 
-const STATS = [
-  { value: "8+",    label: "Destinations" },
-  { value: "₹→$",   label: "All Currencies" },
-  { value: "AI",    label: "Smart Planning" },
-];
+// Same hero image + wash treatment as AI Course Match — keep this in sync across all hero sections
+import heroBg from "../../assets/images/ai-tool.png";
 
 const TRUST_PILLS = [
-  { icon: Brain,      text: "Powered by Claude AI"       },
-  { icon: Shield,     text: "Real cost data, not guesses" },
-  { icon: Zap,        text: "Full plan in 15 seconds"    },
+  { icon: Wallet, text: "Real cost data, not guesses", color: "var(--accent-blue)" },
+  { icon: Shield, text: "Scholarships & loans included", color: "var(--accent-green)" },
+  { icon: Zap, text: "Full plan in 15 seconds", color: "var(--accent-pink)" },
 ];
 
-const PREVIEW_ITEMS = [
-  { label: "Tuition (B.Tech, Canada)",  amount: "C$ 28,000", bar: 72, color: "var(--primary)"      },
-  { label: "Living & Food",             amount: "C$ 14,000", bar: 48, color: "var(--extra-indigo)"  },
-  { label: "Scholarships (est.)",       amount: "−C$ 6,000", bar: 28, color: "var(--accent-green)"  },
-  { label: "Part-time earnings (est.)", amount: "−C$ 9,600", bar: 34, color: "var(--accent-green)"  },
+const STATS = [
+  { value: "8+", label: "Destinations" },
+  { value: "AI", label: "Smart Planning" },
 ];
 
-function PreviewBar({ label, amount, bar, color, delay }) {
-  return (
-    <div style={{ marginBottom: "13px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-        <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{label}</span>
-        <span style={{ fontSize: "12px", fontWeight: 700, color }}>{amount}</span>
-      </div>
-      <div style={{ height: "6px", borderRadius: "100px", background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div
-          className="budget-bar"
-          data-width={bar}
-          style={{ height: "100%", borderRadius: "100px", background: color, width: "0%", opacity: 0.85, transition: `width 1.1s cubic-bezier(.4,0,.2,1) ${delay}ms` }}
-        />
-      </div>
-    </div>
-  );
-}
+const LEDGER_ITEMS = [
+  { label: "Tuition (B.Tech, Canada)", amount: "C$ 28,000" },
+  { label: "Living & Food", amount: "C$ 14,000" },
+  { label: "Scholarships (est.)", amount: "−C$ 6,000" },
+  { label: "Part-time earnings", amount: "−C$ 9,600" },
+];
+
+const TOTAL_ESTIMATE = { amount: "C$ 1,46,000", inr: "≈ ₹89 Lakh" };
 
 export default function BudgetHero() {
-  const barsRef = useRef(null);
+  const [lineIndex, setLineIndex] = useState(-1);
+  const [totalIn, setTotalIn] = useState(false);
+  const hasRun = useRef(false);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      barsRef.current?.querySelectorAll(".budget-bar").forEach((el) => {
-        el.style.width = el.dataset.width + "%";
-      });
-    }, 350);
-    return () => clearTimeout(t);
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    const timers = [];
+    LEDGER_ITEMS.forEach((_, i) => {
+      timers.push(setTimeout(() => setLineIndex(i), 600 + i * 380));
+    });
+    timers.push(
+      setTimeout(() => setTotalIn(true), 600 + LEDGER_ITEMS.length * 380 + 350)
+    );
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   return (
-    <section
-      style={{ fontFamily: "var(--font-main)", background: "var(--primary-dark)", position: "relative", overflow: "hidden", padding: "72px 24px 80px" }}
-    >
-      <div style={{ position: "absolute", top: "-80px", left: "-80px", width: "360px", height: "360px", borderRadius: "50%", background: "radial-gradient(circle, rgba(109,83,163,0.5) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: "-60px", right: "-60px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(49,185,120,0.28) 0%, transparent 70%)", pointerEvents: "none" }} />
+    <section className="budget-hero">
+      <div className="budget-hero__media">
+        <div className="budget-hero__bg" style={{ backgroundImage: `url(${heroBg})` }} />
+        <div className="budget-hero__wash" />
+      </div>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div className="budget-hero-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }}>
+      <div className="budget-hero__inner">
+        <div className="budget-hero__eyebrow">
+          <span className="pulse-dot" />
+          <IndianRupee size={14} className="budget-hero__eyebrow-icon" />
+          AI Budget Calculator
+        </div>
 
-          {/* LEFT */}
-          <div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "100px", padding: "7px 18px", marginBottom: "28px" }}>
-              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent-green)", animation: "budgetPulse 2s infinite", flexShrink: 0 }} />
-              <DollarSign size={14} color="rgba(255,255,255,0.75)" />
-              <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.85)", letterSpacing: "0.06em", textTransform: "uppercase" }}>AI Budget Calculator</span>
+        <h1 className="budget-hero__headline">
+          Know the real cost of
+          <br />
+          <span className="grad-word">your study abroad dream.</span>
+        </h1>
+
+        <p className="budget-hero__sub">
+          Enter your destination, course, and budget. Our AI builds a complete
+          financial plan — tuition, living costs, loan options, scholarships,
+          and part-time earnings — all in one place.
+        </p>
+
+        <div className="budget-hero__cta-row">
+          <a href="#budget-form" className="cta-primary">
+            <span>Calculate My Budget</span>
+            <ArrowRight size={17} className="cta-primary__arrow" />
+          </a>
+          <a href="/eligibility-checker" className="cta-secondary">
+            <span>Check Eligibility First</span>
+          </a>
+        </div>
+
+        <div className="budget-hero__pills">
+          {TRUST_PILLS.map(({ icon: Icon, text, color }) => (
+            <div className="pill" key={text}>
+              <Icon size={13} style={{ color }} />
+              <span>{text}</span>
             </div>
+          ))}
+        </div>
 
-            <h1 style={{ fontSize: "clamp(30px,4.5vw,54px)", fontWeight: 800, lineHeight: 1.12, color: "#fff", marginBottom: "20px" }}>
-              Know the Real Cost of
-              <br />
-              <span style={{ background: "var(--gradient-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                Your Study Abroad Dream.
-              </span>
-            </h1>
-
-            <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.68)", lineHeight: 1.7, maxWidth: "480px", marginBottom: "32px" }}>
-              Enter your destination, course, and budget. Our AI builds a complete
-              financial plan — tuition, living costs, loan options, scholarships,
-              and part-time earnings — all in one place.
-            </p>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "38px" }}>
-              {TRUST_PILLS.map(({ icon: Icon, text }) => (
-                <div key={text} style={{ display: "inline-flex", alignItems: "center", gap: "7px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "100px", padding: "6px 14px" }}>
-                  <Icon size={13} color="var(--accent-green)" />
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>{text}</span>
+        {/* Signature: unified frosted console — live ledger resolving into a total */}
+        <div className="budget-console">
+          <div className="budget-console__ledger">
+            {LEDGER_ITEMS.map((item, i) => {
+              const active = i <= lineIndex;
+              const isCredit = item.amount.startsWith("−");
+              return (
+                <div className={`budget-console__line ${active ? "is-active" : ""}`} key={item.label}>
+                  <span className="budget-console__line-label">{item.label}</span>
+                  <span className={`budget-console__line-amount ${isCredit ? "is-credit" : ""}`}>
+                    {active ? item.amount : "—"}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-              <a
-                href="#budget-form"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "14px 28px", borderRadius: "var(--radius-md)", background: "var(--gradient-primary)", color: "#fff", fontWeight: 700, fontSize: "15px", textDecoration: "none", boxShadow: "0 8px 24px rgba(49,185,120,0.3)", transition: "var(--transition)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
-              >
-                Calculate My Budget
-                <ArrowRight size={17} />
-              </a>
-              <a
-                href="/eligibility-checker"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "14px 28px", borderRadius: "var(--radius-md)", background: "transparent", border: "1px solid rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "15px", textDecoration: "none", transition: "var(--transition)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                Check Eligibility First
-              </a>
-            </div>
-
-            <div style={{ display: "flex", gap: "36px", marginTop: "48px", paddingTop: "32px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-              {STATS.map(({ value, label }) => (
-                <div key={label}>
-                  <div style={{ fontSize: "26px", fontWeight: 800, background: "var(--gradient-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{value}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", fontWeight: 500, marginTop: "2px" }}>{label}</div>
-                </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          {/* RIGHT — live preview card */}
-          <div ref={barsRef}>
-            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "var(--radius-xl)", padding: "32px", backdropFilter: "blur(12px)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px", paddingBottom: "18px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <div style={{ width: "44px", height: "44px", borderRadius: "var(--radius-sm)", background: "var(--gradient-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Brain size={22} color="#fff" />
-                </div>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>Budget Preview</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>B.Tech · Canada · 4 years</div>
-                </div>
-                <div style={{ marginLeft: "auto", background: "rgba(49,185,120,0.15)", border: "1px solid rgba(49,185,120,0.3)", borderRadius: "100px", padding: "4px 12px", fontSize: "11px", fontWeight: 700, color: "var(--accent-green)" }}>Live</div>
+          {/* Bottom row: total block (left, bordered) + stats — mirrors AI Course Match's ring + stats layout */}
+          <div className="budget-console__bottom">
+            <div className="budget-console__total">
+              <div className="budget-console__total-icon">
+                <PiggyBank size={20} />
               </div>
-
-              {/* Total cost highlight */}
-              <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: "var(--radius-md)", padding: "16px 18px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Est. (4 yr)</div>
-                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#fff", marginTop: "3px" }}>C$ 1,46,000</div>
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>≈ ₹89 Lakh</div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ background: "rgba(49,185,120,0.15)", border: "1px solid rgba(49,185,120,0.25)", borderRadius: "var(--radius-sm)", padding: "6px 12px" }}>
-                    <div style={{ fontSize: "11px", color: "var(--accent-green)", fontWeight: 700 }}>Budget: Stretched</div>
-                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Gap: ₹18L</div>
-                  </div>
-                </div>
+              <div className="budget-console__total-text">
+                <span className="budget-console__total-label">Total Est. (4 yr)</span>
+                <span className={`budget-console__total-value ${totalIn ? "is-in" : ""}`}>
+                  {totalIn ? TOTAL_ESTIMATE.amount : "Calculating…"}
+                </span>
+                <span className={`budget-console__total-sub ${totalIn ? "is-in" : ""}`}>
+                  {totalIn ? TOTAL_ESTIMATE.inr : ""}
+                </span>
               </div>
+            </div>
 
-              {PREVIEW_ITEMS.map((item, i) => (
-                <PreviewBar key={item.label} {...item} delay={300 + i * 150} />
+            <div className="budget-console__stats">
+              {STATS.map(({ value, label }) => (
+                <div className="budget-console__stat" key={label}>
+                  <div className="budget-console__value">{value}</div>
+                  <div className="budget-console__statlabel">{label}</div>
+                </div>
               ))}
-
-              <div style={{ marginTop: "18px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: "8px" }}>
-                <Sparkles size={13} color="rgba(255,255,255,0.4)" />
-                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>AI-generated breakdown — not a generic estimate</span>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes budgetPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-        @media(max-width:768px){ .budget-hero-grid{ grid-template-columns:1fr !important; gap:40px !important; } }
+        .budget-hero {
+          position: relative;
+          font-family: var(--font-main);
+          color: var(--text-dark);
+          padding: 110px 24px 96px;
+          overflow: visible;
+          background: var(--bg-section);
+          isolation: isolate;
+        }
+
+        .budget-hero__media {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        }
+
+        .budget-hero__bg {
+          position: absolute;
+          inset: 0;
+          background-size: cover;
+          background-position: center;
+          filter: grayscale(4%) brightness(1.02);
+          transform: scale(1.02);
+        }
+
+        .budget-hero__wash {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(
+              135deg,
+              color-mix(in srgb, var(--primary-light) 68%, transparent) 0%,
+              color-mix(in srgb, var(--bg-section) 58%, transparent) 50%,
+              color-mix(in srgb, var(--white) 48%, transparent) 100%
+            ),
+            radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--accent-green) 14%, transparent) 0%, transparent 50%);
+        }
+
+        .budget-hero__inner {
+          position: relative;
+          z-index: 2;
+          max-width: 720px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .budget-hero__eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: color-mix(in srgb, var(--white) 62%, transparent);
+          border: 1px solid var(--border);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-radius: 100px;
+          padding: 8px 18px;
+          margin-bottom: 26px;
+          color: var(--primary-dark);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          animation: budgetFadeUp 0.7s ease both;
+        }
+
+        .budget-hero__eyebrow-icon { color: var(--accent-green); }
+
+        .budget-hero__headline {
+          font-size: clamp(34px, 4.8vw, 56px);
+          font-weight: 800;
+          line-height: 1.14;
+          letter-spacing: -0.01em;
+          color: var(--primary-dark);
+          margin-bottom: 20px;
+          animation: budgetFadeUp 0.7s ease 0.05s both;
+        }
+
+        .grad-word {
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .budget-hero__sub {
+          font-size: 16px;
+          line-height: 1.75;
+          color: var(--text-medium);
+          max-width: 520px;
+          margin: 0 auto 32px;
+          animation: budgetFadeUp 0.7s ease 0.1s both;
+        }
+
+        .budget-hero__cta-row {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 28px;
+          animation: budgetFadeUp 0.7s ease 0.15s both;
+        }
+
+        .cta-primary, .cta-secondary {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 15px 30px;
+          border-radius: 100px;
+          font-weight: 700;
+          font-size: 0.92rem;
+          letter-spacing: 0.01em;
+          text-decoration: none;
+          transition: var(--transition);
+        }
+
+        .cta-primary {
+          background: var(--primary-dark);
+          color: var(--white);
+          box-shadow: var(--shadow-md);
+        }
+
+        .cta-primary:hover {
+          background: var(--primary);
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .cta-primary__arrow { transition: transform 0.25s ease; }
+        .cta-primary:hover .cta-primary__arrow { transform: translateX(3px); }
+
+        .cta-secondary {
+          background: color-mix(in srgb, var(--white) 70%, transparent);
+          border: 1px solid var(--border);
+          color: var(--primary-dark);
+          backdrop-filter: blur(8px);
+        }
+
+        .cta-secondary:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          transform: translateY(-3px);
+        }
+
+        .budget-hero__pills {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 44px;
+          animation: budgetFadeUp 0.7s ease 0.2s both;
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: color-mix(in srgb, var(--white) 55%, transparent);
+          border: 1px solid var(--border);
+          backdrop-filter: blur(6px);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--text-medium);
+        }
+
+        .pill svg { flex-shrink: 0; }
+
+        .pulse-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--accent-green);
+          animation: budgetPulse 2s infinite;
+          flex-shrink: 0;
+        }
+
+        @keyframes budgetPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        /* ===== Signature: unified frosted console — live ledger + total ===== */
+        /* Same footprint as the AI Course Match console: max-width 640px, 26px/32px padding, 18px blur */
+
+        .budget-console {
+          width: 100%;
+          max-width: 640px;
+          display: flex;
+          flex-direction: column;
+          background: color-mix(in srgb, var(--white) 82%, transparent);
+          border: 1px solid color-mix(in srgb, var(--white) 90%, transparent);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border-radius: var(--radius-xl);
+          box-shadow:
+            0 20px 60px color-mix(in srgb, var(--primary-dark) 18%, transparent),
+            0 8px 24px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+          padding: 26px 32px;
+          animation: budgetFadeUp 0.7s ease 0.3s both;
+        }
+
+        .budget-console__ledger {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding-bottom: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .budget-console__line {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 8px 12px;
+          border-radius: var(--radius-sm);
+          background: transparent;
+          transition: all 0.4s cubic-bezier(.4,0,.2,1);
+        }
+
+        .budget-console__line.is-active {
+          background: color-mix(in srgb, var(--accent-green) 7%, transparent);
+        }
+
+        .budget-console__line-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-light);
+          transition: color 0.4s ease;
+          text-align: left;
+        }
+
+        .budget-console__line.is-active .budget-console__line-label {
+          color: var(--text-medium);
+        }
+
+        .budget-console__line-amount {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-light);
+          transition: color 0.4s ease;
+          white-space: nowrap;
+        }
+
+        .budget-console__line.is-active .budget-console__line-amount {
+          color: var(--primary-dark);
+        }
+
+        .budget-console__line.is-active .budget-console__line-amount.is-credit {
+          color: var(--accent-green);
+        }
+
+        /* Bottom row: total block (left, bordered) + stats row — mirrors AI Course Match's match-console pattern */
+
+        .budget-console__bottom {
+          display: flex;
+          align-items: center;
+          gap: 28px;
+        }
+
+        .budget-console__total {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          flex-shrink: 0;
+          padding-right: 26px;
+          border-right: 1px solid var(--border);
+        }
+
+        .budget-console__total-icon {
+          width: 64px;
+          height: 64px;
+          flex-shrink: 0;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--primary-light);
+          color: var(--primary);
+        }
+
+        .budget-console__total-text {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          text-align: left;
+        }
+
+        .budget-console__total-label {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--accent-green);
+        }
+
+        .budget-console__total-value {
+          font-size: 16px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          color: var(--text-light);
+          transition: color 0.5s ease;
+        }
+
+        .budget-console__total-value.is-in {
+          color: var(--primary-dark);
+        }
+
+        .budget-console__total-sub {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-medium);
+          opacity: 0;
+          transform: translateY(3px);
+          transition: all 0.5s cubic-bezier(.4,0,.2,1);
+        }
+
+        .budget-console__total-sub.is-in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .budget-console__stats {
+          display: flex;
+          flex: 1;
+        }
+
+        .budget-console__stat {
+          flex: 1;
+          text-align: center;
+          padding: 0 10px;
+        }
+
+        .budget-console__stat:not(:first-child) {
+          border-left: 1px solid var(--border);
+        }
+
+        .budget-console__value {
+          font-size: 22px;
+          font-weight: 800;
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .budget-console__statlabel {
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--text-light);
+          margin-top: 3px;
+        }
+
+        @keyframes budgetFadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 640px) {
+          .budget-hero { padding: 84px 18px 70px; }
+
+          .budget-console { padding: 24px 22px; }
+
+          .budget-console__line-label,
+          .budget-console__line-amount { font-size: 12px; }
+
+          .budget-console__bottom {
+            flex-direction: column;
+            gap: 20px;
+          }
+
+          .budget-console__total {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid var(--border);
+            padding-right: 0;
+            padding-bottom: 18px;
+            justify-content: center;
+          }
+
+          .budget-console__stats { width: 100%; }
+
+          .cta-primary, .cta-secondary { justify-content: center; width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .budget-hero__eyebrow, .budget-hero__headline, .budget-hero__sub,
+          .budget-hero__cta-row, .budget-hero__pills, .budget-console {
+            animation: none; opacity: 1; transform: none;
+          }
+          .pulse-dot { animation: none; }
+          .cta-primary:hover, .cta-secondary:hover { transform: none; }
+          .budget-console__line, .budget-console__total-value, .budget-console__total-sub {
+            transition: none;
+          }
+        }
       `}</style>
     </section>
   );

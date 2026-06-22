@@ -1,33 +1,33 @@
 import { useEffect, useRef } from "react";
-import { ArrowRight, Brain, Shield, Zap, GitCompareArrows, Trophy } from "lucide-react";
+import { ArrowRight, Brain, Shield, Zap, Compass, MapPin } from "lucide-react";
 
 // Same hero image + wash treatment as AI Course Match — keep this in sync across all hero sections
 import heroBg from "../../assets/images/ai-tool.png";
 
 const TRUST_PILLS = [
   { icon: Brain, text: "Powered by Claude AI", color: "var(--accent-blue)" },
-  { icon: Shield, text: "Real rankings & fees", color: "var(--accent-green)" },
-  { icon: Zap, text: "Side-by-side in 15s", color: "var(--accent-pink)" },
+  { icon: Shield, text: "Based on you, not trends", color: "var(--accent-green)" },
+  { icon: Zap, text: "2 minutes, no signup", color: "var(--accent-pink)" },
 ];
 
 const STATS = [
-  { value: "10+", label: "Colleges Indexed" },
-  { value: "8", label: "Compare Parameters" },
-  { value: "AI", label: "Verdict" },
+  { value: "10", label: "Quick Questions" },
+  { value: "2 min", label: "To Complete" },
+  { value: "AI", label: "Fit Score" },
 ];
 
-const AI_PICK = { code: "TOP PICK", name: "IIT Madras — best overall fit", pct: 82 };
+const TOP_MATCH = { code: "🇨🇦", name: "Canada — your best overall fit", pct: 91 };
 
 const RING_RADIUS = 30;
 const RING_CIRC = 2 * Math.PI * RING_RADIUS;
 
-export default function CompareHero() {
+export default function QuizHero() {
   const ringRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
       if (ringRef.current) {
-        const offset = RING_CIRC - (AI_PICK.pct / 100) * RING_CIRC;
+        const offset = RING_CIRC - (TOP_MATCH.pct / 100) * RING_CIRC;
         ringRef.current.style.strokeDashoffset = offset;
       }
     }, 500);
@@ -35,42 +35,42 @@ export default function CompareHero() {
   }, []);
 
   return (
-    <section className="compare-hero">
-      <div className="compare-hero__media">
-        <div className="compare-hero__bg" style={{ backgroundImage: `url(${heroBg})` }} />
-        <div className="compare-hero__wash" />
+    <section className="quiz-hero">
+      <div className="quiz-hero__media">
+        <div className="quiz-hero__bg" style={{ backgroundImage: `url(${heroBg})` }} />
+        <div className="quiz-hero__wash" />
       </div>
 
-      <div className="compare-hero__inner">
-        <div className="compare-hero__eyebrow">
+      <div className="quiz-hero__inner">
+        <div className="quiz-hero__eyebrow">
           <span className="pulse-dot" />
-          <GitCompareArrows size={14} className="compare-hero__eyebrow-icon" />
-          AI College Comparison
+          <Compass size={14} className="quiz-hero__eyebrow-icon" />
+          Education Fit Quiz
         </div>
 
-        <h1 className="compare-hero__headline">
-          Compare colleges
+        <h1 className="quiz-hero__headline">
+          Which country
           <br />
-          <span className="grad-word">side by side, instantly.</span>
+          <span className="grad-word">actually fits you?</span>
         </h1>
 
-        <p className="compare-hero__sub">
-          Pick any colleges — in India or abroad — and let AI compare rankings,
-          fees, placements and scholarships side by side. Or tell us your
-          priorities and we'll suggest the best-fit colleges for you.
+        <p className="quiz-hero__sub">
+          Skip the generic "Top 10 countries" lists. Answer 10 quick questions
+          about your personality, priorities and lifestyle — and let AI match
+          you to the destination that genuinely fits who you are.
         </p>
 
-        <div className="compare-hero__cta-row">
-          <a href="#compare-form" className="cta-primary">
-            <span>Compare Colleges Now</span>
+        <div className="quiz-hero__cta-row">
+          <a href="#quiz-questions" className="cta-primary">
+            <span>Take the Quiz</span>
             <ArrowRight size={17} className="cta-primary__arrow" />
           </a>
-          <a href="/budget-calculator" className="cta-secondary">
-            <span>Calculate Budget First</span>
+          <a href="/compare-colleges" className="cta-secondary">
+            <span>Compare Colleges Instead</span>
           </a>
         </div>
 
-        <div className="compare-hero__pills">
+        <div className="quiz-hero__pills">
           {TRUST_PILLS.map(({ icon: Icon, text, color }) => (
             <div className="pill" key={text}>
               <Icon size={13} style={{ color }} />
@@ -79,11 +79,11 @@ export default function CompareHero() {
           ))}
         </div>
 
-        {/* Signature: unified frosted console — AI verdict ring + live stats */}
-        <div className="compare-console">
-          <div className="compare-console__match">
-            <div className="compare-console__ring-wrap">
-              <svg className="compare-console__ring" viewBox="0 0 72 72">
+        {/* Signature: unified frosted console — top country match ring + live stats */}
+        <div className="quiz-console">
+          <div className="quiz-console__match">
+            <div className="quiz-console__ring-wrap">
+              <svg className="quiz-console__ring" viewBox="0 0 72 72">
                 <circle cx="36" cy="36" r={RING_RADIUS} fill="none" stroke="var(--bg-light)" strokeWidth="6" />
                 <circle
                   ref={ringRef}
@@ -95,29 +95,29 @@ export default function CompareHero() {
                   strokeDasharray={RING_CIRC}
                   strokeDashoffset={RING_CIRC}
                   transform="rotate(-90 36 36)"
-                  className="compare-console__ring-fill"
+                  className="quiz-console__ring-fill"
                 />
               </svg>
-              <span className="compare-console__pct">{AI_PICK.pct}%</span>
+              <span className="quiz-console__pct">{TOP_MATCH.pct}%</span>
             </div>
 
-            <div className="compare-console__text">
-              <span className="compare-console__label">
-                <Trophy size={11} />
-                AI Recommends
+            <div className="quiz-console__text">
+              <span className="quiz-console__label">
+                <MapPin size={11} />
+                Top Country Match
               </span>
-              <span className="compare-console__name">
-                <span className="compare-console__code">{AI_PICK.code}</span>
-                {AI_PICK.name}
+              <span className="quiz-console__name">
+                <span className="quiz-console__code">{TOP_MATCH.code}</span>
+                {TOP_MATCH.name}
               </span>
             </div>
           </div>
 
-          <div className="compare-console__stats">
+          <div className="quiz-console__stats">
             {STATS.map(({ value, label }) => (
-              <div className="compare-console__stat" key={label}>
-                <div className="compare-console__value">{value}</div>
-                <div className="compare-console__statlabel">{label}</div>
+              <div className="quiz-console__stat" key={label}>
+                <div className="quiz-console__value">{value}</div>
+                <div className="quiz-console__statlabel">{label}</div>
               </div>
             ))}
           </div>
@@ -125,7 +125,7 @@ export default function CompareHero() {
       </div>
 
       <style>{`
-        .compare-hero {
+        .quiz-hero {
           position: relative;
           font-family: var(--font-main);
           color: var(--text-dark);
@@ -135,14 +135,14 @@ export default function CompareHero() {
           isolation: isolate;
         }
 
-        .compare-hero__media {
+        .quiz-hero__media {
           position: absolute;
           inset: 0;
           overflow: hidden;
           border-radius: 0 0 var(--radius-xl) var(--radius-xl);
         }
 
-        .compare-hero__bg {
+        .quiz-hero__bg {
           position: absolute;
           inset: 0;
           background-size: cover;
@@ -151,7 +151,7 @@ export default function CompareHero() {
           transform: scale(1.02);
         }
 
-        .compare-hero__wash {
+        .quiz-hero__wash {
           position: absolute;
           inset: 0;
           background:
@@ -161,10 +161,10 @@ export default function CompareHero() {
               color-mix(in srgb, var(--bg-section) 58%, transparent) 50%,
               color-mix(in srgb, var(--white) 48%, transparent) 100%
             ),
-            radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--secondary) 14%, transparent) 0%, transparent 50%);
+            radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--extra-indigo) 14%, transparent) 0%, transparent 50%);
         }
 
-        .compare-hero__inner {
+        .quiz-hero__inner {
           position: relative;
           z-index: 2;
           max-width: 720px;
@@ -175,7 +175,7 @@ export default function CompareHero() {
           text-align: center;
         }
 
-        .compare-hero__eyebrow {
+        .quiz-hero__eyebrow {
           display: inline-flex;
           align-items: center;
           gap: 8px;
@@ -191,19 +191,19 @@ export default function CompareHero() {
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          animation: compareFadeUp 0.7s ease both;
+          animation: quizFadeUp 0.7s ease both;
         }
 
-        .compare-hero__eyebrow-icon { color: var(--secondary); }
+        .quiz-hero__eyebrow-icon { color: var(--extra-indigo); }
 
-        .compare-hero__headline {
+        .quiz-hero__headline {
           font-size: clamp(34px, 4.8vw, 56px);
           font-weight: 800;
           line-height: 1.14;
           letter-spacing: -0.01em;
           color: var(--primary-dark);
           margin-bottom: 20px;
-          animation: compareFadeUp 0.7s ease 0.05s both;
+          animation: quizFadeUp 0.7s ease 0.05s both;
         }
 
         .grad-word {
@@ -213,22 +213,22 @@ export default function CompareHero() {
           background-clip: text;
         }
 
-        .compare-hero__sub {
+        .quiz-hero__sub {
           font-size: 16px;
           line-height: 1.75;
           color: var(--text-medium);
           max-width: 520px;
           margin: 0 auto 32px;
-          animation: compareFadeUp 0.7s ease 0.1s both;
+          animation: quizFadeUp 0.7s ease 0.1s both;
         }
 
-        .compare-hero__cta-row {
+        .quiz-hero__cta-row {
           display: flex;
           justify-content: center;
           gap: 16px;
           flex-wrap: wrap;
           margin-bottom: 28px;
-          animation: compareFadeUp 0.7s ease 0.15s both;
+          animation: quizFadeUp 0.7s ease 0.15s both;
         }
 
         .cta-primary, .cta-secondary {
@@ -272,13 +272,13 @@ export default function CompareHero() {
           transform: translateY(-3px);
         }
 
-        .compare-hero__pills {
+        .quiz-hero__pills {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
           gap: 10px;
           margin-bottom: 44px;
-          animation: compareFadeUp 0.7s ease 0.2s both;
+          animation: quizFadeUp 0.7s ease 0.2s both;
         }
 
         .pill {
@@ -302,15 +302,15 @@ export default function CompareHero() {
           height: 7px;
           border-radius: 50%;
           background: var(--accent-green);
-          animation: comparePulse 2s infinite;
+          animation: quizPulse 2s infinite;
           flex-shrink: 0;
         }
 
-        @keyframes comparePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+        @keyframes quizPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
         /* ===== Signature: unified frosted console — same footprint as AI Course Match ===== */
 
-        .compare-console {
+        .quiz-console {
           width: 100%;
           max-width: 640px;
           box-sizing: border-box;
@@ -326,12 +326,12 @@ export default function CompareHero() {
             0 20px 60px color-mix(in srgb, var(--primary-dark) 18%, transparent),
             0 8px 24px color-mix(in srgb, var(--primary-dark) 8%, transparent);
           padding: 26px 28px;
-          animation: compareFadeUp 0.7s ease 0.3s both;
+          animation: quizFadeUp 0.7s ease 0.3s both;
         }
 
         /* flex-shrink:0 removed + max-width added so this block can no longer push the
            stats column past the card edge; min-width:0 lets it shrink before that point */
-        .compare-console__match {
+        .quiz-console__match {
           display: flex;
           align-items: center;
           gap: 14px;
@@ -343,20 +343,20 @@ export default function CompareHero() {
           box-sizing: border-box;
         }
 
-        .compare-console__ring-wrap {
+        .quiz-console__ring-wrap {
           position: relative;
           width: 64px;
           height: 64px;
           flex-shrink: 0;
         }
 
-        .compare-console__ring { width: 100%; height: 100%; }
+        .quiz-console__ring { width: 100%; height: 100%; }
 
-        .compare-console__ring-fill {
+        .quiz-console__ring-fill {
           transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
         }
 
-        .compare-console__pct {
+        .quiz-console__pct {
           position: absolute;
           inset: 0;
           display: flex;
@@ -367,7 +367,7 @@ export default function CompareHero() {
           color: var(--primary-dark);
         }
 
-        .compare-console__text {
+        .quiz-console__text {
           display: flex;
           flex-direction: column;
           gap: 5px;
@@ -375,7 +375,7 @@ export default function CompareHero() {
           min-width: 0;
         }
 
-        .compare-console__label {
+        .quiz-console__label {
           display: inline-flex;
           align-items: center;
           gap: 5px;
@@ -387,7 +387,7 @@ export default function CompareHero() {
           white-space: nowrap;
         }
 
-        .compare-console__name {
+        .quiz-console__name {
           font-size: 12px;
           color: var(--text-medium);
           line-height: 1.4;
@@ -395,9 +395,9 @@ export default function CompareHero() {
           word-break: break-word;
         }
 
-        .compare-console__code {
+        .quiz-console__code {
           display: inline-block;
-          font-size: 11px;
+          font-size: 14px;
           font-weight: 800;
           letter-spacing: 0.03em;
           color: var(--primary);
@@ -405,18 +405,19 @@ export default function CompareHero() {
           border-radius: var(--radius-sm);
           padding: 2px 7px;
           margin-right: 7px;
+          line-height: 1;
           white-space: nowrap;
         }
 
         /* min-width:0 is the actual fix — without it a flex item will never shrink
            below its content's natural width, and long words spill past the card edge */
-        .compare-console__stats {
+        .quiz-console__stats {
           display: flex;
           flex: 1 1 0%;
           min-width: 0;
         }
 
-        .compare-console__stat {
+        .quiz-console__stat {
           flex: 1 1 0%;
           min-width: 0;
           text-align: center;
@@ -424,11 +425,11 @@ export default function CompareHero() {
           box-sizing: border-box;
         }
 
-        .compare-console__stat:not(:first-child) {
+        .quiz-console__stat:not(:first-child) {
           border-left: 1px solid var(--border);
         }
 
-        .compare-console__value {
+        .quiz-console__value {
           font-size: 22px;
           font-weight: 800;
           background: var(--gradient-primary);
@@ -440,7 +441,7 @@ export default function CompareHero() {
 
         /* word-break + overflow-wrap is the safety net: even a single long word will
            wrap inside its own column instead of overflowing it */
-        .compare-console__statlabel {
+        .quiz-console__statlabel {
           font-size: 10.5px;
           font-weight: 500;
           color: var(--text-light);
@@ -451,21 +452,21 @@ export default function CompareHero() {
           hyphens: auto;
         }
 
-        @keyframes compareFadeUp {
+        @keyframes quizFadeUp {
           from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 640px) {
-          .compare-hero { padding: 84px 18px 70px; }
+          .quiz-hero { padding: 84px 18px 70px; }
 
-          .compare-console {
+          .quiz-console {
             flex-direction: column;
             gap: 20px;
             padding: 24px 22px;
           }
 
-          .compare-console__match {
+          .quiz-console__match {
             width: 100%;
             max-width: none;
             border-right: none;
@@ -475,19 +476,19 @@ export default function CompareHero() {
             justify-content: center;
           }
 
-          .compare-console__stats { width: 100%; }
+          .quiz-console__stats { width: 100%; }
 
           .cta-primary, .cta-secondary { justify-content: center; width: 100%; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .compare-hero__eyebrow, .compare-hero__headline, .compare-hero__sub,
-          .compare-hero__cta-row, .compare-hero__pills, .compare-console {
+          .quiz-hero__eyebrow, .quiz-hero__headline, .quiz-hero__sub,
+          .quiz-hero__cta-row, .quiz-hero__pills, .quiz-console {
             animation: none; opacity: 1; transform: none;
           }
           .pulse-dot { animation: none; }
           .cta-primary:hover, .cta-secondary:hover { transform: none; }
-          .compare-console__ring-fill { transition: none; }
+          .quiz-console__ring-fill { transition: none; }
         }
       `}</style>
     </section>

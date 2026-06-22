@@ -12,6 +12,7 @@ import AICourseMatch from "./pages/AICourseMatch";
 import EligibilityChecker from "./pages/EligibilityChecker";
 import BudgetCalculator from "./pages/BudgetCalculator";
 import CompareColleges from "./pages/CompareColleges";
+import CountryFitQuiz from "./pages/CountryFitQuiz";
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
         <Route path="/eligibility-checker" element={<EligibilityChecker />}/>
         <Route path="/budget-calculator" element={<BudgetCalculator />} />
         <Route path="/compare-colleges" element={<CompareColleges />} />
+        <Route path="/country-fit-quiz" element={<CountryFitQuiz />} />
       </Routes>
 
       <Footer />

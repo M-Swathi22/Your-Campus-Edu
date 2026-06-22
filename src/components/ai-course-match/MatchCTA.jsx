@@ -1,171 +1,228 @@
 import {
   ArrowRight,
-  MessageCircle,
+  CheckCircle2,
+  UserCheck,
   GraduationCap,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function MatchCTA() {
   return (
     <section
       style={{
-        fontFamily: "var(--font-main)",
-        padding: "80px 24px",
+        padding: "70px 24px",
         background: "var(--bg-light)",
+        fontFamily: "var(--font-main)",
       }}
     >
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+      <div
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+        }}
+      >
         <div
           style={{
-            background: "var(--gradient-secondary)",
+            background: "var(--bg-main)",
+            border: "1px solid var(--border)",
             borderRadius: "var(--radius-xl)",
-            padding: "clamp(36px,6vw,60px)",
-            position: "relative",
+            boxShadow: "var(--shadow-lg)",
             overflow: "hidden",
-            textAlign: "center",
+            position: "relative",
           }}
         >
-          {/* Decorative Blobs */}
+          {/* Top Gradient */}
           <div
             style={{
-              position: "absolute",
-              top: "-60px",
-              right: "-60px",
-              width: "240px",
-              height: "240px",
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.06)",
-              pointerEvents: "none",
+              height: "6px",
+              background: "var(--gradient-primary)",
             }}
           />
 
           <div
             style={{
-              position: "absolute",
-              bottom: "-80px",
-              left: "-40px",
-              width: "200px",
-              height: "200px",
-              borderRadius: "50%",
-              background: "rgba(49,185,120,0.12)",
-              pointerEvents: "none",
-            }}
-          />
-
-          <div
-            style={{
-              position: "relative",
-              zIndex: 1,
-              maxWidth: "650px",
-              margin: "0 auto",
+              padding: "48px",
+              textAlign: "center",
             }}
           >
-            {/* Icon */}
+            {/* Badge */}
             <div
               style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "var(--radius-md)",
-                background: "rgba(255,255,255,0.12)",
                 display: "inline-flex",
                 alignItems: "center",
-                justifyContent: "center",
+                gap: "8px",
+                padding: "10px 18px",
+                borderRadius: "999px",
+                background: "var(--primary-light)",
+                color: "var(--primary)",
+                fontWeight: 600,
+                fontSize: "14px",
                 marginBottom: "24px",
               }}
             >
-              <GraduationCap size={34} color="#fff" />
+              <GraduationCap size={16} />
+              AI Analysis Complete
             </div>
 
             {/* Heading */}
             <h2
               style={{
-                fontSize: "clamp(24px,4vw,38px)",
+                fontSize: "clamp(30px,4vw,42px)",
                 fontWeight: 800,
-                color: "#fff",
                 lineHeight: 1.2,
+                color: "var(--text-dark)",
                 marginBottom: "14px",
               }}
             >
-              Need Guidance After Your Course Match?
+              Your Course Match Is Ready.
+              <span
+                style={{
+                  display: "block",
+                  color: "var(--primary)",
+                }}
+              >
+                Let's Build Your Next Step.
+              </span>
             </h2>
 
             {/* Description */}
             <p
               style={{
-                fontSize: "15px",
-                color: "rgba(255,255,255,0.78)",
-                lineHeight: 1.7,
-                marginBottom: "36px",
+                maxWidth: "650px",
+                margin: "0 auto",
+                color: "var(--text-medium)",
+                fontSize: "16px",
+                lineHeight: "1.8",
               }}
             >
-              Get personalised counselling to choose the right course,
-              shortlist colleges, understand eligibility requirements,
-              explore scholarships, and plan your academic journey.
+              You've received your AI-powered course recommendations.
+              Our education experts can now help you shortlist universities,
+              explore scholarships, and create a complete admission strategy.
             </p>
 
-            {/* Buttons */}
+            {/* Status Row */}
             <div
               style={{
                 display: "flex",
-                flexWrap: "wrap",
                 justifyContent: "center",
-                gap: "14px",
+                flexWrap: "wrap",
+                gap: "24px",
+                marginTop: "34px",
+                marginBottom: "34px",
               }}
             >
-              <a
-                href="/contact"
+              <div
                 style={{
-                  display: "inline-flex",
+                  display: "flex",
                   alignItems: "center",
-                  gap: "8px",
-                  padding: "15px 32px",
-                  borderRadius: "var(--radius-md)",
-                  background: "#fff",
-                  color: "var(--primary)",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-                  transition: "all 0.3s ease",
+                  gap: "10px",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.transform = "translateY(-2px)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.transform = "translateY(0)")
-                }
               >
-                Book Free Consultation
-                <ArrowRight size={17} />
-              </a>
+                <CheckCircle2
+                  size={20}
+                  color="var(--accent-green)"
+                />
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: "var(--text-dark)",
+                  }}
+                >
+                  AI Recommendation Ready
+                </span>
+              </div>
 
-              <a
-                href="/courses"
+              <div
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "15px 32px",
-                  borderRadius: "var(--radius-md)",
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.28)",
-                  color: "#fff",
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  transition: "all 0.3s ease",
+                  width: "1px",
+                  background: "var(--border)",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background =
-                    "rgba(255,255,255,0.1)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
+              />
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
               >
-                <MessageCircle size={17} />
-                Explore All Courses
-              </a>
+                <UserCheck
+                  size={20}
+                  color="var(--primary)"
+                />
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: "var(--text-dark)",
+                  }}
+                >
+                  Expert Guidance Available
+                </span>
+              </div>
             </div>
+
+            {/* CTA Button */}
+           {/* CTA Buttons */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: "14px",
+    flexWrap: "wrap",
+  }}
+>
+  {/* Primary Button */}
+  <a
+    href="/contact"
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "16px 34px",
+      borderRadius: "var(--radius-md)",
+      background: "var(--primary)",
+      color: "#fff",
+      textDecoration: "none",
+      fontWeight: 700,
+      boxShadow: "0 10px 24px rgba(109,83,163,0.25)",
+      transition: "var(--transition)",
+    }}
+  >
+    Book Free Consultation
+    <ArrowRight size={18} />
+  </a>
+
+  {/* Secondary Button */}
+  <Link
+  to="/eligibility-checker"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "16px 34px",
+    borderRadius: "var(--radius-md)",
+    background: "transparent",
+    color: "var(--primary)",
+    textDecoration: "none",
+    fontWeight: 700,
+    border: "1.5px solid var(--primary)",
+    transition: "var(--transition)",
+  }}
+>
+  Check Eligibility
+  <ArrowRight size={18} />
+</Link>
+</div>
+            {/* Trust Text */}
+            <p
+              style={{
+                marginTop: "18px",
+                fontSize: "14px",
+                color: "var(--text-light)",
+              }}
+            >
+              No obligation consultation • Personalized guidance • Study abroad & domestic admissions
+            </p>
           </div>
         </div>
       </div>

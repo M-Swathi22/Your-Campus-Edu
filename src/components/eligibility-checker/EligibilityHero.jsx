@@ -1,209 +1,477 @@
-import { useEffect, useRef } from "react";
-import { Sparkles, ArrowRight, Brain, Shield, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, ArrowRight, ScanLine, ShieldCheck, Clock3, CheckCircle2 } from "lucide-react";
+
+// Swap this for your actual background image (a bright, airy campus / student photo reads best here)
+import heroBg from "../../assets/images/ai-tool.png";
+
+const TRUST_PILLS = [
+  { icon: ScanLine, text: "Checked against live cutoffs", color: "var(--accent-blue)" },
+  { icon: ShieldCheck, text: "Verified eligibility logic", color: "var(--accent-green)" },
+  { icon: Clock3, text: "Verdict in 10 seconds", color: "var(--accent-pink)" },
+];
 
 const STATS = [
   { value: "50+", label: "Course Categories" },
   { value: "7+", label: "Study Destinations" },
-  { value: "AI", label: "Instant Verdict" },
+  { value: "92%", label: "Match Accuracy" },
 ];
 
-const TRUST_PILLS = [
-  { icon: Brain, text: "Powered by Claude AI" },
-  { icon: Shield, text: "Domestic & Abroad" },
-  { icon: Zap, text: "Verdict in seconds" },
-];
-
-const PREVIEW_CRITERIA = [
-  { label: "Stream Requirement", status: "MET", pct: 100 },
-  { label: "Minimum Percentage", status: "MET", pct: 88 },
-  { label: "Entrance Exam", status: "PARTIAL", pct: 62 },
-  { label: "English Proficiency", status: "MET", pct: 95 },
-];
-
-function statusColor(status) {
-  if (status === "MET") return "var(--accent-green)";
-  if (status === "PARTIAL") return "var(--warning)";
-  return "var(--danger)";
-}
-
-function CriteriaBar({ label, status, pct, delay }) {
-  return (
-    <div style={{ marginBottom: "14px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", alignItems: "center" }}>
-        <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{label}</span>
-        <span
-          style={{
-            fontSize: "10px",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            color: statusColor(status),
-            background: "rgba(255,255,255,0.07)",
-            padding: "2px 10px",
-            borderRadius: "100px",
-          }}
-        >
-          {status === "MET" ? "✓ Met" : status === "PARTIAL" ? "⚡ Partial" : "✕ Not Met"}
-        </span>
-      </div>
-      <div style={{ height: "6px", borderRadius: "100px", background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-        <div
-          className="elig-bar"
-          data-width={pct}
-          style={{
-            height: "100%",
-            borderRadius: "100px",
-            background: statusColor(status),
-            width: "0%",
-            transition: `width 1.1s cubic-bezier(.4,0,.2,1) ${delay}ms`,
-            opacity: 0.85,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
+const SCAN_FIELDS = ["Stream", "Marks", "Entrance Exam", "English Score"];
 
 export default function EligibilityHero() {
-  const barsRef = useRef(null);
+  const [scanIndex, setScanIndex] = useState(-1);
+  const [verdictIn, setVerdictIn] = useState(false);
+  const hasRun = useRef(false);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      barsRef.current?.querySelectorAll(".elig-bar").forEach((el) => {
-        el.style.width = el.dataset.width + "%";
-      });
-    }, 350);
-    return () => clearTimeout(t);
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    const timers = [];
+    SCAN_FIELDS.forEach((_, i) => {
+      timers.push(setTimeout(() => setScanIndex(i), 600 + i * 420));
+    });
+    timers.push(
+      setTimeout(() => setVerdictIn(true), 600 + SCAN_FIELDS.length * 420 + 350)
+    );
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   return (
-    <section
-      style={{
-        fontFamily: "var(--font-main)",
-        background: "var(--primary-dark)",
-        position: "relative",
-        overflow: "hidden",
-        padding: "72px 24px 80px",
-      }}
-    >
-      {/* Ambient blobs */}
-      <div style={{ position: "absolute", top: "-80px", left: "-80px", width: "360px", height: "360px", borderRadius: "50%", background: "radial-gradient(circle, rgba(109,83,163,0.5) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: "-60px", right: "-60px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(49,185,120,0.28) 0%, transparent 70%)", pointerEvents: "none" }} />
+    <section className="elig-hero">
+      <div className="elig-hero__media">
+        <div className="elig-hero__bg" style={{ backgroundImage: `url(${heroBg})` }} />
+        <div className="elig-hero__wash" />
+      </div>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div className="elig-hero-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }}>
+      <div className="elig-hero__inner">
+        <div className="elig-hero__eyebrow">
+          <span className="pulse-dot" />
+          <ScanLine size={14} className="elig-hero__eyebrow-icon" />
+          AI Eligibility Checker
+        </div>
 
-          {/* LEFT */}
-          <div>
-            {/* Badge */}
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "100px", padding: "7px 18px", marginBottom: "28px" }}>
-              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent-green)", animation: "eligPulse 2s infinite", flexShrink: 0 }} />
-              <Sparkles size={14} color="rgba(255,255,255,0.8)" />
-              <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.85)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                AI Eligibility Checker
-              </span>
+        <h1 className="elig-hero__headline">
+          Know your eligibility
+          <br />
+          <span className="grad-word">before you apply.</span>
+        </h1>
+
+        <p className="elig-hero__sub">
+          Check eligibility for Indian colleges or international universities
+          in seconds. Our AI evaluates your stream, marks, entrance scores
+          and more — then issues a clear, personalised verdict.
+        </p>
+
+        <div className="elig-hero__cta-row">
+          <a href="#eligibility-form" className="cta-primary">
+            <span>Check My Eligibility</span>
+            <ArrowRight size={17} className="cta-primary__arrow" />
+          </a>
+          <a href="/courses" className="cta-secondary">
+            <span>Browse Courses</span>
+          </a>
+        </div>
+
+        <div className="elig-hero__pills">
+          {TRUST_PILLS.map(({ icon: Icon, text, color }) => (
+            <div className="pill" key={text}>
+              <Icon size={13} style={{ color }} />
+              <span>{text}</span>
             </div>
+          ))}
+        </div>
 
-            <h1 style={{ fontSize: "clamp(30px,4.5vw,54px)", fontWeight: 800, lineHeight: 1.12, color: "#fff", marginBottom: "20px" }}>
-              Know Your Eligibility
-              <br />
-              <span style={{ background: "var(--gradient-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                Before You Apply.
-              </span>
-            </h1>
-
-            <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.68)", lineHeight: 1.7, maxWidth: "480px", marginBottom: "32px" }}>
-              Check eligibility for Indian colleges or international universities in seconds.
-              Our AI evaluates your stream, marks, entrance scores, and more — then gives
-              you a personalised verdict with clear next steps.
-            </p>
-
-            {/* Trust pills */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "38px" }}>
-              {TRUST_PILLS.map(({ icon: Icon, text }) => (
-                <div key={text} style={{ display: "inline-flex", alignItems: "center", gap: "7px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "100px", padding: "6px 14px" }}>
-                  <Icon size={13} color="var(--accent-green)" />
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>{text}</span>
+        {/* Signature: unified frosted console — scan checklist resolving into a verdict strip */}
+        <div className="elig-console">
+          <div className="elig-console__scan">
+            {SCAN_FIELDS.map((label, i) => {
+              const active = i <= scanIndex;
+              return (
+                <div className={`elig-console__field ${active ? "is-active" : ""}`} key={label}>
+                  <span className="elig-console__field-icon">
+                    {active && <CheckCircle2 size={12} strokeWidth={2.5} />}
+                  </span>
+                  <span className="elig-console__field-label">{label}</span>
                 </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-              <a
-                href="#eligibility-form"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "14px 28px", borderRadius: "var(--radius-md)", background: "var(--gradient-primary)", color: "#fff", fontWeight: 700, fontSize: "15px", textDecoration: "none", boxShadow: "0 8px 24px rgba(49,185,120,0.3)", transition: "var(--transition)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
-              >
-                Check My Eligibility
-                <ArrowRight size={17} />
-              </a>
-              <a
-                href="/courses"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "14px 28px", borderRadius: "var(--radius-md)", background: "transparent", border: "1px solid rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "15px", textDecoration: "none", transition: "var(--transition)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                Browse Courses
-              </a>
-            </div>
-
-            {/* Stats */}
-            <div style={{ display: "flex", gap: "36px", marginTop: "48px", paddingTop: "32px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-              {STATS.map(({ value, label }) => (
-                <div key={label}>
-                  <div style={{ fontSize: "26px", fontWeight: 800, background: "var(--gradient-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{value}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", fontWeight: 500, marginTop: "2px" }}>{label}</div>
-                </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          {/* RIGHT — preview card */}
-          <div ref={barsRef}>
-            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "var(--radius-xl)", padding: "32px", backdropFilter: "blur(12px)" }}>
-              {/* Card header */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px", paddingBottom: "18px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <div style={{ width: "44px", height: "44px", borderRadius: "var(--radius-sm)", background: "var(--gradient-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Brain size={22} color="#fff" />
-                </div>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>Eligibility Preview</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>Science (Biology) · MBBS · India</div>
-                </div>
-                <div style={{ marginLeft: "auto", background: "rgba(49,185,120,0.15)", border: "1px solid rgba(49,185,120,0.3)", borderRadius: "100px", padding: "4px 12px", fontSize: "11px", fontWeight: 700, color: "var(--accent-green)" }}>
-                  Live
-                </div>
-              </div>
+          <div className={`elig-console__verdict ${verdictIn ? "is-in" : ""}`}>
+            <span className="elig-console__verdict-result">
+              {verdictIn ? "Eligible" : "Scanning your profile…"}
+            </span>
+            <span className="elig-console__verdict-match">
+              {verdictIn ? "92% match · MBBS" : ""}
+            </span>
+          </div>
 
-              {/* Verdict badge */}
-              <div style={{ background: "rgba(49,185,120,0.12)", border: "1px solid rgba(49,185,120,0.25)", borderRadius: "var(--radius-sm)", padding: "12px 16px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--accent-green)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ color: "#fff", fontWeight: 800, fontSize: "14px" }}>✓</span>
-                </div>
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-green)" }}>Fully Eligible</div>
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>All core criteria met</div>
-                </div>
-                <div style={{ marginLeft: "auto", fontSize: "22px", fontWeight: 800, color: "#fff" }}>92<span style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>%</span></div>
+          <div className="elig-console__stats">
+            {STATS.map(({ value, label }) => (
+              <div className="elig-console__stat" key={label}>
+                <div className="elig-console__value">{value}</div>
+                <div className="elig-console__statlabel">{label}</div>
               </div>
-
-              {PREVIEW_CRITERIA.map((c, i) => (
-                <CriteriaBar key={c.label} {...c} delay={300 + i * 150} />
-              ))}
-
-              <div style={{ marginTop: "18px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: "8px" }}>
-                <Sparkles size={13} color="rgba(255,255,255,0.4)" />
-                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>AI verdict — not a generic filter</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes eligPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-        @media(max-width:768px){ .elig-hero-grid{ grid-template-columns:1fr !important; gap:40px !important; } }
+        .elig-hero {
+          position: relative;
+          font-family: var(--font-main);
+          color: var(--text-dark);
+          padding: 110px 24px 96px;
+          overflow: visible;
+          background: var(--bg-section);
+          isolation: isolate;
+        }
+
+        .elig-hero__media {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        }
+
+        .elig-hero__bg {
+          position: absolute;
+          inset: 0;
+          background-size: cover;
+          background-position: center;
+          filter: grayscale(4%) brightness(1.02);
+          transform: scale(1.02);
+        }
+
+        .elig-hero__wash {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(
+              135deg,
+              color-mix(in srgb, var(--primary-light) 68%, transparent) 0%,
+              color-mix(in srgb, var(--bg-section) 58%, transparent) 50%,
+              color-mix(in srgb, var(--white) 48%, transparent) 100%
+            ),
+            radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--accent-green) 14%, transparent) 0%, transparent 50%);
+        }
+
+        .elig-hero__inner {
+          position: relative;
+          z-index: 2;
+          max-width: 720px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .elig-hero__eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: color-mix(in srgb, var(--white) 62%, transparent);
+          border: 1px solid var(--border);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-radius: 100px;
+          padding: 8px 18px;
+          margin-bottom: 26px;
+          color: var(--primary-dark);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          animation: eligFadeUp 0.7s ease both;
+        }
+
+        .elig-hero__eyebrow-icon { color: var(--accent-green); }
+
+        .elig-hero__headline {
+          font-size: clamp(34px, 4.8vw, 56px);
+          font-weight: 800;
+          line-height: 1.14;
+          letter-spacing: -0.01em;
+          color: var(--primary-dark);
+          margin-bottom: 20px;
+          animation: eligFadeUp 0.7s ease 0.05s both;
+        }
+
+        .grad-word {
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .elig-hero__sub {
+          font-size: 16px;
+          line-height: 1.75;
+          color: var(--text-medium);
+          max-width: 520px;
+          margin: 0 auto 32px;
+          animation: eligFadeUp 0.7s ease 0.1s both;
+        }
+
+        .elig-hero__cta-row {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 28px;
+          animation: eligFadeUp 0.7s ease 0.15s both;
+        }
+
+        .cta-primary, .cta-secondary {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 15px 30px;
+          border-radius: 100px;
+          font-weight: 700;
+          font-size: 0.92rem;
+          letter-spacing: 0.01em;
+          text-decoration: none;
+          transition: var(--transition);
+        }
+
+        .cta-primary {
+          background: var(--primary-dark);
+          color: var(--white);
+          box-shadow: var(--shadow-md);
+        }
+
+        .cta-primary:hover {
+          background: var(--primary);
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .cta-primary__arrow { transition: transform 0.25s ease; }
+        .cta-primary:hover .cta-primary__arrow { transform: translateX(3px); }
+
+        .cta-secondary {
+          background: color-mix(in srgb, var(--white) 70%, transparent);
+          border: 1px solid var(--border);
+          color: var(--primary-dark);
+          backdrop-filter: blur(8px);
+        }
+
+        .cta-secondary:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          transform: translateY(-3px);
+        }
+
+        .elig-hero__pills {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 44px;
+          animation: eligFadeUp 0.7s ease 0.2s both;
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: color-mix(in srgb, var(--white) 55%, transparent);
+          border: 1px solid var(--border);
+          backdrop-filter: blur(6px);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--text-medium);
+        }
+
+        .pill svg { flex-shrink: 0; }
+
+        .pulse-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--accent-green);
+          animation: eligPulse 2s infinite;
+          flex-shrink: 0;
+        }
+
+        @keyframes eligPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        /* ===== Signature: unified frosted console — scan checklist + verdict strip ===== */
+
+        .elig-console {
+          width: 100%;
+          max-width: 640px;
+          display: flex;
+          flex-direction: column;
+          background: color-mix(in srgb, var(--white) 82%, transparent);
+          border: 1px solid color-mix(in srgb, var(--white) 90%, transparent);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border-radius: var(--radius-xl);
+          box-shadow:
+            0 20px 60px color-mix(in srgb, var(--primary-dark) 18%, transparent),
+            0 8px 24px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+          padding: 26px 32px;
+          animation: eligFadeUp 0.7s ease 0.3s both;
+        }
+
+        .elig-console__scan {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          padding-bottom: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .elig-console__field {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 7px 14px;
+          border-radius: 100px;
+          border: 1px solid var(--border);
+          background: color-mix(in srgb, var(--white) 50%, transparent);
+          transition: all 0.45s cubic-bezier(.4,0,.2,1);
+        }
+
+        .elig-console__field.is-active {
+          border-color: color-mix(in srgb, var(--accent-green) 45%, transparent);
+          background: color-mix(in srgb, var(--accent-green) 10%, transparent);
+        }
+
+        .elig-console__field-icon {
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--accent-green);
+          flex-shrink: 0;
+        }
+
+        .elig-console__field-label {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text-light);
+          transition: color 0.4s ease;
+        }
+
+        .elig-console__field.is-active .elig-console__field-label {
+          color: var(--primary-dark);
+        }
+
+        .elig-console__verdict {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 10px;
+          padding-bottom: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .elig-console__verdict-result {
+          font-size: 17px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          color: var(--text-light);
+          transition: color 0.5s ease;
+        }
+
+        .elig-console__verdict.is-in .elig-console__verdict-result {
+          color: var(--accent-green);
+        }
+
+        .elig-console__verdict-match {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: var(--primary);
+          opacity: 0;
+          transform: translateY(3px);
+          transition: all 0.5s cubic-bezier(.4,0,.2,1);
+        }
+
+        .elig-console__verdict.is-in .elig-console__verdict-match {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .elig-console__stats {
+          display: flex;
+        }
+
+        .elig-console__stat {
+          flex: 1;
+          text-align: center;
+          padding: 0 10px;
+        }
+
+        .elig-console__stat:not(:first-child) {
+          border-left: 1px solid var(--border);
+        }
+
+        .elig-console__value {
+          font-size: 22px;
+          font-weight: 800;
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .elig-console__statlabel {
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--text-light);
+          margin-top: 3px;
+        }
+
+        @keyframes eligFadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 640px) {
+          .elig-hero { padding: 84px 18px 70px; }
+
+          .elig-console {
+            padding: 22px 18px;
+          }
+
+          .elig-console__scan {
+            gap: 8px;
+          }
+
+          .elig-console__field {
+            padding: 6px 11px;
+          }
+
+          .elig-console__field-label {
+            font-size: 11.5px;
+          }
+
+          .cta-primary, .cta-secondary { justify-content: center; width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .elig-hero__eyebrow, .elig-hero__headline, .elig-hero__sub,
+          .elig-hero__cta-row, .elig-hero__pills, .elig-console {
+            animation: none; opacity: 1; transform: none;
+          }
+          .pulse-dot { animation: none; }
+          .cta-primary:hover, .cta-secondary:hover { transform: none; }
+          .elig-console__field, .elig-console__verdict-result, .elig-console__verdict-match {
+            transition: none;
+          }
+        }
       `}</style>
     </section>
   );
