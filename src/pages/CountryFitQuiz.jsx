@@ -66,30 +66,7 @@ Return ONLY valid raw JSON (no markdown, no code fences, no preamble):
 }`;
 }
 
-/* ─── AI API call via Vite proxy ─── */
-async function callQuizAI(answers) {
-  const prompt = buildQuizPrompt(answers);
 
-  const response = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1800,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `API error ${response.status}`);
-  }
-
-  const data = await response.json();
-  const raw = data.content?.map((b) => b.text || "").join("") || "";
-  const clean = raw.replace(/^```(?:json)?\n?/m, "").replace(/```$/m, "").trim();
-  return JSON.parse(clean);
-}
 
 /* ─── Page ─── */
 export default function EducationFitQuiz() {
@@ -100,16 +77,116 @@ export default function EducationFitQuiz() {
 
   const resultRef = useRef(null);
 
-  const handleComplete = async (answers) => {
+  const handleComplete =  (answers) => {
     setLoading(true);
     setError(null);
     setResult(null);
     setHasResult(false);
 
     try {
-      const data = await callQuizAI(answers);
-      setResult(data);
-      setHasResult(true);
+      const data = {
+  archetype: {
+    emoji: "🎯",
+    title: "The Strategic Explorer",
+    description:
+      "You balance career growth, affordability, and global exposure when choosing a study destination.",
+    traits: [
+      "Career Focused",
+      "Practical",
+      "Adaptable",
+      "Growth Mindset",
+    ],
+  },
+
+  summary:
+    "Your answers suggest that you value strong career opportunities while keeping costs under control.",
+
+  destinations: [
+    {
+      country: "Canada",
+      flag: "🇨🇦",
+      matchScore: 95,
+      reason:
+        "Excellent balance of education quality, affordability, and post-study work opportunities.",
+      strengths: [
+        "Affordable tuition",
+        "Work opportunities",
+        "Immigration pathway",
+      ],
+      watchOut: "Cold weather may require adjustment.",
+    },
+
+    {
+      country: "Australia",
+      flag: "🇦🇺",
+      matchScore: 90,
+      reason:
+        "Strong universities and excellent student lifestyle.",
+      strengths: [
+        "High quality education",
+        "Part-time work",
+        "Good lifestyle",
+      ],
+      watchOut: "Living expenses can be high.",
+    },
+
+    {
+      country: "Germany",
+      flag: "🇩🇪",
+      matchScore: 87,
+      reason:
+        "Excellent option for students looking for affordable education.",
+      strengths: [
+        "Low tuition fees",
+        "Strong engineering programs",
+        "Research opportunities",
+      ],
+      watchOut: "Learning German may be beneficial.",
+    },
+
+    {
+      country: "United Kingdom",
+      flag: "🇬🇧",
+      matchScore: 82,
+      reason:
+        "Prestigious universities with shorter degree durations.",
+      strengths: [
+        "Global reputation",
+        "Shorter programs",
+        "Strong alumni network",
+      ],
+      watchOut: "Higher tuition costs.",
+    },
+  ],
+
+  insights: [
+    "You appear to prioritize long-term career outcomes over short-term convenience.",
+    "You are open to adapting to new environments if the opportunity is worthwhile.",
+    "Cost matters, but you are willing to invest when value is clear.",
+  ],
+
+  nextSteps: [
+    {
+      step: "Research Universities",
+      detail:
+        "Shortlist universities in your top two matched countries.",
+    },
+    {
+      step: "Estimate Budget",
+      detail:
+        "Calculate tuition and living expenses for your preferred destination.",
+    },
+    {
+      step: "Check Eligibility",
+      detail:
+        "Review admission requirements and language tests.",
+    },
+  ],
+};
+
+setResult(data);
+setHasResult(true);
+    
     } catch (err) {
       console.error("Quiz AI error:", err);
       setError(

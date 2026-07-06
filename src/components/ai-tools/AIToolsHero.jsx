@@ -144,26 +144,26 @@ function AIToolsHero() {
         }
 
         .ath-photo {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 1;
-  z-index: 0;
-}
+          position: absolute;
+          inset: 0;
+          background-size: cover;
+          background-position: center;
+          opacity: 1;
+          z-index: 0;
+        }
 
         .ath-wash {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(248,245,255,0.65) 0%,
-      rgba(243,238,255,0.55) 50%,
-      rgba(255,255,255,0.45) 100%
-    );
-  z-index: 1;
-}
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(
+              135deg,
+              rgba(248,245,255,0.65) 0%,
+              rgba(243,238,255,0.55) 50%,
+              rgba(255,255,255,0.45) 100%
+            );
+          z-index: 1;
+        }
 
         .ath-shell {
           position: relative;
@@ -316,13 +316,11 @@ function AIToolsHero() {
           max-width: 440px;
           height: 520px;
           border-radius: var(--radius-xl);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-         background: rgba(255,255,255,0.82);
-  border: 1px solid rgba(255,255,255,0.9);
-  box-shadow:
-    0 20px 60px rgba(36,20,79,0.18),
-    0 8px 24px rgba(36,20,79,0.08);
-          box-shadow: var(--shadow-lg);
+          background: rgba(255,255,255,0.82);
+          border: 1px solid rgba(255,255,255,0.9);
+          box-shadow:
+            0 20px 60px rgba(36,20,79,0.18),
+            0 8px 24px rgba(36,20,79,0.08);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
           overflow: hidden;
@@ -472,31 +470,75 @@ function AIToolsHero() {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Responsive ── */
+        /* ════════════════════════════════════════
+           RESPONSIVE
+        ════════════════════════════════════════ */
+
+        /* Tablet & below: single column — LEFT (text) top, RIGHT (track) bottom */
         @media (max-width: 980px) {
+          .ath-root {
+            padding: 110px 24px 72px;
+            align-items: flex-start;
+          }
           .ath-shell {
             grid-template-columns: 1fr;
-            gap: 48px;
+            gap: 40px;
           }
-          .ath-right { order: -1; }
-          .ath-track { max-width: 100%; height: 440px; }
+          /* Explicit order: text first, track second */
+          .ath-left  { order: 1; }
+          .ath-right { order: 2; }
+
+          .ath-track {
+            max-width: 100%;
+            height: 400px;
+          }
+          .ath-sub { max-width: 100%; }
+          .ath-stats { gap: 28px; margin-top: 44px; }
         }
 
+        /* Mobile */
         @media (max-width: 600px) {
-          .ath-root { padding: 100px 20px 70px; }
-          .ath-actions { flex-direction: column; align-items: stretch; }
-          .ath-btn-primary, .ath-btn-secondary { justify-content: center; }
-          .ath-stats { gap: 24px; margin-top: 40px; }
-          .ath-stat h3 { font-size: 1.6rem; }
-          .ath-track { height: 380px; }
-          .ath-track-head { padding: 16px 18px; }
-          .ath-tool-card { padding: 13px; gap: 12px; }
-          .ath-tool-icon { width: 38px; height: 38px; }
-          .ath-tool-status { display: none; }
+          .ath-root { padding: 96px 18px 60px; }
+
+          .ath-badge { font-size: 0.68rem; padding: 7px 14px; }
+
+          .ath-actions {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .ath-btn-primary,
+          .ath-btn-secondary {
+            justify-content: center;
+            padding: 15px 24px;
+          }
+
+          .ath-stats {
+            gap: 16px;
+            margin-top: 36px;
+            padding-top: 24px;
+          }
+          .ath-stat h3 { font-size: 1.55rem; }
+          .ath-stat p  { font-size: 0.78rem; }
+
+          .ath-track { height: 340px; }
+          .ath-track-head { padding: 14px 16px; }
+          .ath-track-head-left { font-size: 0.68rem; }
+
+          .ath-tool-card { padding: 12px; gap: 10px; }
+          .ath-tool-icon { width: 36px; height: 36px; }
+          .ath-tool-text h4 { font-size: 0.85rem; }
+          .ath-tool-text p  { font-size: 0.74rem; }
+          .ath-tool-status  { display: none; }
+
+          .ath-track-window { padding: 0 10px; }
+          .ath-track-belt { gap: 10px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .ath-track-belt, .ath-live-dot, .ath-left, .ath-right {
+          .ath-track-belt,
+          .ath-live-dot,
+          .ath-left,
+          .ath-right {
             animation: none;
           }
         }

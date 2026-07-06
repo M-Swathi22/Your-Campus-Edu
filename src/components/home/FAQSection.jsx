@@ -1,7 +1,3 @@
-// src/components/home/FAQSection.jsx
-// PREMIUM FAQ SECTION — Industry Level Redesign
-// Theme: theme.css CSS variables + Poppins only
-
 import { useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
@@ -266,41 +262,6 @@ export default function FAQSection() {
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Stats card */}
-            <div style={{
-              borderRadius: "var(--radius-lg)", border: "1.5px solid var(--border)",
-              background: "var(--bg-main)", overflow: "hidden",
-              boxShadow: "var(--shadow-md)", marginBottom: 16,
-            }}>
-              <div style={{ height: 4, background: "var(--gradient-primary)" }} />
-              <div style={{ padding: "22px 24px 24px" }}>
-                <p style={{
-                  fontFamily: "var(--font-main)", fontSize: 10, fontWeight: 700,
-                  letterSpacing: "0.18em", textTransform: "uppercase",
-                  color: "var(--primary)", margin: "0 0 18px",
-                }}>
-                  By the Numbers
-                </p>
-                {trustItems.map((item, i) => (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "12px 0",
-                    borderBottom: i < trustItems.length - 1 ? "1px solid var(--border)" : "none",
-                  }}>
-                    <span style={{ fontFamily: "var(--font-main)", fontSize: 12.5, color: "var(--text-medium)", fontWeight: 400 }}>
-                      {item.label}
-                    </span>
-                    <span style={{
-                      fontFamily: "var(--font-main)", fontSize: 18, fontWeight: 800,
-                      background: "var(--gradient-primary)",
-                      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                    }}>
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Why Choose Us */}
             <div style={{

@@ -20,7 +20,6 @@ const FEATURES = [
    Flower collage geometry  —  ViewBox 580 × 580
    Center : r = 100  at (290, 290)
    Petals : r = 108  offset 190px from center
-   Each petal overlaps the center ring slightly — classic flower look
 ───────────────────────────────────────────────────────────── */
 const CX       = 290;
 const CY       = 290;
@@ -40,30 +39,200 @@ const petals = [0, 1, 2, 3, 4].map((i) => ({
 export default function OurStory() {
   return (
     <section
-      className="relative overflow-hidden py-24 lg:py-32"
+      className="our-story-section"
       style={{ background: "var(--bg-light)", fontFamily: "var(--font-main)" }}
     >
-      {/* Top-left decorative blob */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: "-100px",
-          left: "-100px",
-          width: "420px",
-          height: "420px",
-          borderRadius: "50%",
-          background: "var(--primary-light)",
-          opacity: 0.5,
-          zIndex: 0,
-        }}
-      />
+      <style>{`
+        .our-story-section {
+          position: relative;
+          overflow: hidden;
+          padding: clamp(64px, 10vw, 128px) 0;
+        }
 
-      <div
-        className="container mx-auto max-w-7xl px-6"
-        style={{ position: "relative", zIndex: 1 }}
-      >
-        <div className="grid items-center gap-16 lg:grid-cols-2">
+        .our-story-blob {
+          position: absolute;
+          top: -100px;
+          left: -100px;
+          width: clamp(200px, 40vw, 420px);
+          height: clamp(200px, 40vw, 420px);
+          border-radius: 50%;
+          background: var(--primary-light);
+          opacity: 0.5;
+          z-index: 0;
+        }
+
+        .our-story-container {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 0 clamp(20px, 5vw, 48px);
+        }
+
+        .our-story-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          align-items: center;
+          gap: clamp(40px, 6vw, 64px);
+        }
+
+        @media (min-width: 1024px) {
+          .our-story-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        /* ── Flower collage wrapper ── */
+        .our-story-collage-wrap {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          /* On mobile the SVG should not overflow the screen */
+          width: 100%;
+        }
+
+        .our-story-collage-inner {
+          position: relative;
+          /* Intrinsic SVG sizing: let it fill available width up to 520px */
+          width: min(100%, 520px);
+        }
+
+        .our-story-glow {
+          position: absolute;
+          inset: 10%;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(109,83,163,0.09) 0%, transparent 68%);
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        .our-story-svg {
+          width: 100%;
+          height: auto;       /* keeps the square aspect ratio from viewBox */
+          display: block;
+          position: relative;
+          z-index: 1;
+          overflow: visible;
+        }
+
+        /* ── Text panel ── */
+        .our-story-text {
+          max-width: 540px;
+          /* On mobile center-align everything */
+        }
+
+        @media (max-width: 1023px) {
+          .our-story-text {
+            max-width: 100%;
+            margin: 0 auto;
+            text-align: center;
+          }
+          .our-story-features {
+            align-items: center;
+          }
+          .our-story-cta-wrap {
+            display: flex;
+            justify-content: center;
+          }
+        }
+
+        .our-story-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--primary-light);
+          color: var(--primary);
+          border-radius: 999px;
+          padding: 6px 18px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          font-family: var(--font-main);
+        }
+
+        .our-story-pill-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--primary);
+          display: inline-block;
+          flex-shrink: 0;
+        }
+
+        .our-story-heading {
+          margin-top: 20px;
+          font-size: clamp(1.75rem, 3.5vw, 3rem);
+          font-weight: 700;
+          line-height: 1.2;
+          color: var(--text-dark);
+          font-family: var(--font-main);
+        }
+
+        .our-story-body {
+          margin-top: 24px;
+          font-size: clamp(0.9rem, 1.5vw, 1rem);
+          line-height: 1.85;
+          color: var(--text-medium);
+          font-family: var(--font-main);
+        }
+
+        .our-story-body + .our-story-body {
+          margin-top: 12px;
+        }
+
+        .our-story-features {
+          margin-top: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          list-style: none;
+          padding: 0;
+        }
+
+        .our-story-feature-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-family: var(--font-main);
+        }
+
+        @media (max-width: 1023px) {
+          .our-story-feature-item {
+            justify-content: center;
+          }
+        }
+
+        .our-story-feature-label {
+          font-size: 0.95rem;
+          font-weight: 500;
+          color: var(--text-dark);
+        }
+
+        .our-story-cta {
+          margin-top: 36px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: var(--gradient-secondary);
+          color: var(--text-white);
+          border: none;
+          border-radius: var(--radius-md);
+          padding: clamp(12px, 2vw, 14px) clamp(22px, 3vw, 28px);
+          font-size: 0.95rem;
+          font-weight: 600;
+          font-family: var(--font-main);
+          cursor: pointer;
+          box-shadow: var(--shadow-md);
+        }
+      `}</style>
+
+      {/* Decorative blob */}
+      <div aria-hidden="true" className="our-story-blob" />
+
+      <div className="our-story-container">
+        <div className="our-story-grid">
 
           {/* ══════════ LEFT – FLOWER COLLAGE ══════════ */}
           <motion.div
@@ -71,39 +240,15 @@ export default function OurStory() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.75, ease: "easeOut" }}
-            style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+            className="our-story-collage-wrap"
           >
-            <div
-              style={{
-                position: "relative",
-                width: "580px",
-                height: "580px",
-                flexShrink: 0,
-              }}
-            >
-              {/* Soft radial glow */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  inset: "60px",
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle, rgba(109,83,163,0.09) 0%, transparent 68%)",
-                  zIndex: 0,
-                }}
-              />
+            <div className="our-story-collage-inner">
+              <div aria-hidden="true" className="our-story-glow" />
 
               <svg
                 viewBox="0 0 580 580"
                 xmlns="http://www.w3.org/2000/svg"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  position: "relative",
-                  zIndex: 1,
-                  overflow: "visible",
-                }}
+                className="our-story-svg"
               >
                 <defs>
                   <clipPath id="clip-c">
@@ -166,48 +311,16 @@ export default function OurStory() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.75, ease: "easeOut" }}
-            className="max-w-xl"
+            className="our-story-text"
           >
             {/* Label pill */}
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "var(--primary-light)",
-                color: "var(--primary)",
-                borderRadius: "999px",
-                padding: "6px 18px",
-                fontSize: "12px",
-                fontWeight: "600",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                fontFamily: "var(--font-main)",
-              }}
-            >
-              <span
-                style={{
-                  width: "7px",
-                  height: "7px",
-                  borderRadius: "50%",
-                  background: "var(--primary)",
-                  display: "inline-block",
-                }}
-              />
+            <span className="our-story-pill">
+              <span className="our-story-pill-dot" />
               Our Story
             </span>
 
             {/* Heading */}
-            <h2
-              style={{
-                marginTop: "20px",
-                fontSize: "clamp(2rem, 3.5vw, 3rem)",
-                fontWeight: "700",
-                lineHeight: "1.2",
-                color: "var(--text-dark)",
-                fontFamily: "var(--font-main)",
-              }}
-            >
+            <h2 className="our-story-heading">
               Guiding Students
               <br />
               Towards A{" "}
@@ -215,44 +328,19 @@ export default function OurStory() {
             </h2>
 
             {/* Body */}
-            <p
-              style={{
-                marginTop: "24px",
-                fontSize: "1rem",
-                lineHeight: "1.85",
-                color: "var(--text-medium)",
-                fontFamily: "var(--font-main)",
-              }}
-            >
+            <p className="our-story-body">
               Your Campus Edu was created to simplify one of the most important
               decisions in a student&rsquo;s life — choosing the right course,
               college, and career path.
             </p>
-            <p
-              style={{
-                marginTop: "12px",
-                fontSize: "1rem",
-                lineHeight: "1.85",
-                color: "var(--text-medium)",
-                fontFamily: "var(--font-main)",
-              }}
-            >
+            <p className="our-story-body">
               Through expert counseling, personalized guidance, and modern
               technology, we help students discover opportunities that align
               with their ambitions, strengths, and future goals.
             </p>
 
             {/* Feature list */}
-            <ul
-              style={{
-                marginTop: "28px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "14px",
-                listStyle: "none",
-                padding: 0,
-              }}
-            >
+            <ul className="our-story-features">
               {FEATURES.map((item, i) => (
                 <motion.li
                   key={item}
@@ -260,54 +348,28 @@ export default function OurStory() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.08 * i }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    fontFamily: "var(--font-main)",
-                  }}
+                  className="our-story-feature-item"
                 >
                   <CheckCircle2
                     size={20}
                     style={{ color: "var(--primary)", flexShrink: 0 }}
                   />
-                  <span
-                    style={{
-                      fontSize: "0.95rem",
-                      fontWeight: "500",
-                      color: "var(--text-dark)",
-                    }}
-                  >
-                    {item}
-                  </span>
+                  <span className="our-story-feature-label">{item}</span>
                 </motion.li>
               ))}
             </ul>
 
             {/* CTA */}
-            <motion.button
-              whileHover={{ translateY: -3 }}
-              transition={{ duration: 0.2 }}
-              style={{
-                marginTop: "36px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "var(--gradient-secondary)",
-                color: "var(--text-white)",
-                border: "none",
-                borderRadius: "var(--radius-md)",
-                padding: "14px 28px",
-                fontSize: "0.95rem",
-                fontWeight: "600",
-                fontFamily: "var(--font-main)",
-                cursor: "pointer",
-                boxShadow: "var(--shadow-md)",
-              }}
-            >
-              Learn More
-              <ArrowRight size={17} />
-            </motion.button>
+            <div className="our-story-cta-wrap">
+              <motion.button
+                whileHover={{ translateY: -3 }}
+                transition={{ duration: 0.2 }}
+                className="our-story-cta"
+              >
+                Learn More
+                <ArrowRight size={17} />
+              </motion.button>
+            </div>
           </motion.div>
 
         </div>

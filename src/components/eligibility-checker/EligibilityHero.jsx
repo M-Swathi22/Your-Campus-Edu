@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles, ArrowRight, ScanLine, ShieldCheck, Clock3, CheckCircle2 } from "lucide-react";
 
 // Swap this for your actual background image (a bright, airy campus / student photo reads best here)
-import heroBg from "../../assets/images/ai-tool.png";
+import heroBg from "../../assets/images/eligibility.png";
 
 const TRUST_PILLS = [
   { icon: ScanLine, text: "Checked against live cutoffs", color: "var(--accent-blue)" },

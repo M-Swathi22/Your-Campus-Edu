@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Sparkles, ArrowRight, Brain, Shield, Zap, Target } from "lucide-react";
 
 // Swap this for your actual background image (a bright, airy campus / student photo reads best here)
-import heroBg from "../../assets/images/ai-tool.png";
+import heroBg from "../../assets/images/ai-course.png";
 
 const TRUST_PILLS = [
   { icon: Brain, text: "Powered by Claude AI", color: "var(--accent-blue)" },

@@ -20,7 +20,7 @@ const NAV_LINKS = [
   { to: "/",          label: "Home",    exact: true },
   { to: "/about",     label: "About"               },
   { to: "/courses",   label: "Courses"             },
-  { to: "/countries", label: "Countries"           },
+  { to: "/study-destination", label: "StudyDestination"           },
 ];
 
 // AI sub-tools only (no /ai-tools page link here — handled separately)

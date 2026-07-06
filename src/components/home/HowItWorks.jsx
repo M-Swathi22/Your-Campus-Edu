@@ -333,21 +333,70 @@ function easeInOut(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-/* ─── MOBILE STEP CARD ───────────────────────────────────────── */
-function MobileStepCard({ step, index, feats, illus }) {
+/* ─────────────────────────────────────────────────────────────
+   MOBILE STEP CARD — with intersection-observer ref
+───────────────────────────────────────────────────────────── */
+function MobileStepCard({ step, index, feats, illus, isActive, isCompleted, cardRef }) {
   const iHref = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(illus)}`;
+  const isLast = index === STEPS.length - 1;
+
   return (
-    <div className="mob-card" style={{ '--step-color': step.color, '--step-light': step.light }}>
-      <div className="mob-step-row">
-        <div className="mob-num-badge">{step.num}</div>
-        {index < STEPS.length - 1 && <div className="mob-connector" />}
+    <div
+      ref={cardRef}
+      className={`mob-card ${isActive ? "mob-card--active" : ""} ${isCompleted ? "mob-card--done" : ""}`}
+      style={{ "--step-color": step.color, "--step-light": step.light }}
+      data-index={index}
+    >
+      {/* ── LEFT SPINE: badge + animated connector ── */}
+      <div className="mob-spine">
+        {/* Number badge */}
+        <div className={`mob-badge ${isActive ? "mob-badge--active" : ""} ${isCompleted ? "mob-badge--done" : ""}`}>
+          {isCompleted ? (
+            /* checkmark svg */
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <span className="mob-badge-num">{step.num}</span>
+          )}
+          {/* pulse ring — only when active */}
+          {isActive && <span className="mob-badge-pulse" />}
+        </div>
+
+        {/* Connector line — fills on scroll, hidden for last step */}
+        {!isLast && (
+          <div className="mob-line-track">
+            <div
+              className="mob-line-fill"
+              style={{
+                height: isCompleted ? "100%" : isActive ? "50%" : "0%",
+                background: `linear-gradient(to bottom, ${step.color}, ${STEPS[index + 1]?.color ?? step.color})`,
+              }}
+            />
+          </div>
+        )}
       </div>
+
+      {/* ── CARD BODY ── */}
       <div className="mob-body">
+
+        {/* Illustration */}
         <div className="mob-illus-wrap">
           <img src={iHref} alt={step.title} className="mob-illus" />
+          {/* Step label on illustration */}
+          <div className="mob-illus-tag" style={{ background: step.color }}>
+            Step {step.num}
+          </div>
         </div>
+
+        {/* Title */}
         <h3 className="mob-title">{step.title}</h3>
+
+        {/* Description */}
         <p className="mob-desc">{step.desc}</p>
+
+        {/* Feature bullets */}
         <div className="mob-feats">
           {feats.map((f, fi) => (
             <div className="mob-feat" key={fi}>
@@ -356,9 +405,13 @@ function MobileStepCard({ step, index, feats, illus }) {
             </div>
           ))}
         </div>
+
+        {/* CTA */}
         <a href="#" className="mob-btn">
           {step.btn}
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
@@ -370,6 +423,7 @@ function MobileStepCard({ step, index, feats, illus }) {
 
 /* ─── COMPONENT ──────────────────────────────────────────────── */
 export default function HowItWorks() {
+  /* ── DESKTOP state ── */
   const scrollRef = useRef(null);
   const [active, setActive] = useState(0);
   const [planeAngle, setPlaneAngle] = useState(START_ANG);
@@ -381,6 +435,46 @@ export default function HowItWorks() {
   const rafRef = useRef(null);
   const animIdRef = useRef(0);
 
+  /* ── MOBILE state ── */
+  const [mobActive, setMobActive] = useState(0);
+  const [mobCompleted, setMobCompleted] = useState([]); // array of completed indices
+  const cardRefs = useRef([]); // one ref per card
+
+  /* ── MOBILE: IntersectionObserver ── */
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 900;
+    if (!isMobile) return;
+
+    const observers = [];
+
+    cardRefs.current.forEach((el, i) => {
+      if (!el) return;
+
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setMobActive(i);
+            // Mark all previous as completed
+            setMobCompleted(
+              Array.from({ length: i }, (_, k) => k)
+            );
+          }
+        },
+        {
+          // Card is "active" when its top 40% is in the middle third of viewport
+          rootMargin: "-30% 0px -50% 0px",
+          threshold: 0,
+        }
+      );
+
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
+  /* ── DESKTOP: plane animation ── */
   const animatePlane = useCallback((targetDotIndex, direction, onArrive) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     animIdRef.current++;
@@ -431,11 +525,12 @@ export default function HowItWorks() {
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
+  /* ── DESKTOP: scroll driver ── */
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    const N = STEPS.length; // 6
+    const N = STEPS.length;
 
     const onScroll = () => {
       const rect = el.getBoundingClientRect();
@@ -445,15 +540,7 @@ export default function HowItWorks() {
       if (scrollH <= 0) return;
 
       const scrolled = Math.max(0, Math.min(-rect.top, scrollH));
-      const ratio = scrolled / scrollH; // 0..1
-
-      // ── EQUAL ZONES ──────────────────────────────────────────
-      // Divide 0..1 into N equal bands of width 1/N each.
-      // Step i is active when ratio is in [ i/N , (i+1)/N ).
-      // The last step (i = N-1) also catches ratio === 1.
-      //
-      // This guarantees every step gets exactly the same scroll
-      // distance — no step is harder or easier to reach than any other.
+      const ratio = scrolled / scrollH;
       const newActive = Math.min(Math.floor(ratio * N), N - 1);
 
       if (newActive === activeRef.current) return;
@@ -543,12 +630,7 @@ export default function HowItWorks() {
           line-height: 1.8; max-width: 460px; margin: 0 auto;
         }
 
-        /* ── DESKTOP SCROLL ──
-           600vh total, 6 steps → exactly 100vh per step.
-           One full viewport-height of scroll = one step advance.
-           On a typical laptop trackpad, one "page scroll" gesture ≈ 100vh,
-           so a single deliberate scroll moves exactly one step.
-        ── */
+        /* ── DESKTOP SCROLL ── */
         .hiw-scroll { height: 600vh; width: 100%; position: relative; }
         .hiw-sticky {
           position: sticky; top: 0; height: 100vh; width: 100%;
@@ -687,120 +769,354 @@ export default function HowItWorks() {
         .hiw-arrow { animation: hiwBnc 1.8s ease-in-out infinite; display: inline-block; }
         @keyframes hiwBnc { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
 
-        /* ════════════════════════════════════════
-           MOBILE
-           ════════════════════════════════════════ */
+        /* ════════════════════════════════════════════════════════
+           MOBILE — complete redesign
+           ════════════════════════════════════════════════════════ */
         .hiw-mobile-section { display: none; }
 
         @media (max-width: 900px) {
           .hiw-scroll { display: none; }
-          .hiw-mobile-section { display: block; padding: 0 0 60px; }
+          .hiw-mobile-section { display: block; }
 
-          .mob-progress {
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 24px 20px 32px;
-          }
-          .mob-prog-dot {
-            height: 6px; border-radius: 3px; background: #E5E5E5;
-            transition: all 0.3s ease;
+          /* ── STICKY PROGRESS BAR at top ── */
+          .mob-progress-bar-wrap {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #EEEEEE;
+            padding: 12px 20px 10px;
           }
 
-          .mob-card {
-            display: grid;
-            grid-template-columns: 56px 1fr;
-            gap: 0 16px;
-            padding: 0 20px;
+          .mob-progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 8px;
           }
 
-          .mob-step-row {
-            display: flex; flex-direction: column; align-items: center;
-            padding-top: 0;
+          .mob-progress-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #6D53A3;
           }
-          .mob-num-badge {
-            width: 48px; height: 48px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 800;
-            color: var(--step-color);
+
+          .mob-progress-counter {
+            font-size: 11px;
+            font-weight: 700;
+            color: #808080;
+          }
+
+          /* 6 segment dots */
+          .mob-progress-dots {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+          }
+
+          .mob-prog-seg {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #E5E5E5;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.3s ease;
+          }
+
+          .mob-prog-seg--active {
+            background: #E5E5E5;
+          }
+
+          .mob-prog-seg--done {
+            background: transparent;
+          }
+
+          .mob-prog-seg-fill {
+            position: absolute;
+            inset: 0;
+            border-radius: 2px;
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1);
+          }
+
+          .mob-prog-seg--done .mob-prog-seg-fill {
+            transform: scaleX(1);
+          }
+
+          .mob-prog-seg--active .mob-prog-seg-fill {
+            transform: scaleX(0.55);
+            animation: mob-seg-pulse 2s ease-in-out infinite;
+          }
+
+          @keyframes mob-seg-pulse {
+            0%, 100% { transform: scaleX(0.5); }
+            50%       { transform: scaleX(0.65); }
+          }
+
+          /* ── CARDS CONTAINER ── */
+          .mob-cards-wrap {
+            padding: 32px 16px 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+          }
+
+          /* ── SINGLE CARD ── */
+          .mob-card {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 0 14px;
+            position: relative;
+          }
+
+          /* ── SPINE (left column: badge + line) ── */
+          .mob-spine {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 2px;
+          }
+
+          /* Badge */
+          .mob-badge {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+            background: white;
+            border: 2px solid #E5E5E5;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          }
+
+          .mob-badge--active {
+            border-color: var(--step-color);
             background: var(--step-light);
+            transform: scale(1.12);
+            box-shadow: 0 0 0 6px color-mix(in srgb, var(--step-color) 12%, transparent),
+                        0 8px 20px color-mix(in srgb, var(--step-color) 22%, transparent);
+          }
+
+          .mob-badge--done {
+            background: var(--step-color);
+            border-color: var(--step-color);
+            transform: scale(1);
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--step-color) 28%, transparent);
+          }
+
+          .mob-badge-num {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--step-color);
+            font-family: 'Poppins', sans-serif;
+            transition: color 0.3s ease;
+          }
+
+          .mob-badge--active .mob-badge-num {
+            color: var(--step-color);
+          }
+
+          /* Pulse ring — animated only when active */
+          .mob-badge-pulse {
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
             border: 2px solid var(--step-color);
-            flex-shrink: 0; z-index: 1;
-          }
-          .mob-connector {
-            flex: 1; width: 2px; min-height: 24px;
-            background: linear-gradient(to bottom, var(--step-color, #6D53A3), #E5E5E5);
-            opacity: 0.3; margin: 8px 0;
+            opacity: 0;
+            animation: mob-pulse-ring 1.6s ease-out infinite;
           }
 
+          @keyframes mob-pulse-ring {
+            0%   { transform: scale(0.85); opacity: 0.7; }
+            100% { transform: scale(1.4);  opacity: 0; }
+          }
+
+          /* Connector line track */
+          .mob-line-track {
+            flex: 1;
+            width: 3px;
+            border-radius: 2px;
+            background: #EEEEEE;
+            margin: 6px 0;
+            overflow: hidden;
+            position: relative;
+            min-height: 60px;
+          }
+
+          /* Animated fill */
+          .mob-line-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            border-radius: 2px;
+            transition: height 0.7s cubic-bezier(0.34, 1.2, 0.64, 1);
+          }
+
+          /* ── CARD BODY ── */
           .mob-body {
-            background: #fff;
-            border: 1px solid #EEEEEE;
+            background: white;
+            border: 1.5px solid #EEEEEE;
             border-radius: 20px;
-            padding: 20px;
+            padding: 18px;
             margin-bottom: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+            transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
           }
 
+          .mob-card--active .mob-body {
+            border-color: var(--step-color);
+            box-shadow:
+              0 0 0 4px color-mix(in srgb, var(--step-color) 8%, transparent),
+              0 12px 36px color-mix(in srgb, var(--step-color) 14%, transparent),
+              0 4px 12px rgba(0,0,0,0.05);
+            transform: translateX(2px);
+          }
+
+          .mob-card--done .mob-body {
+            border-color: color-mix(in srgb, var(--step-color) 32%, transparent);
+            background: color-mix(in srgb, var(--step-color) 2%, white);
+          }
+
+          /* Illustration */
           .mob-illus-wrap {
-            width: 100%; height: 180px;
+            width: 100%;
+            height: 160px;
             border-radius: 14px;
             overflow: hidden;
             background: var(--step-light);
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            position: relative;
           }
+
           .mob-illus {
-            width: 160px; height: 160px; object-fit: contain;
+            width: 144px;
+            height: 144px;
+            object-fit: contain;
+          }
+
+          .mob-illus-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 9.5px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
           }
 
           .mob-title {
             font-family: 'Poppins', sans-serif;
-            font-size: 18px; font-weight: 800; line-height: 1.25;
-            color: #24144F; margin: 0 0 10px;
-          }
-          .mob-desc {
-            font-size: 14px; color: #525151; line-height: 1.75;
-            margin: 0 0 16px;
+            font-size: 17px;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #24144F;
+            margin: 0 0 8px;
           }
 
-          .mob-feats { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+          .mob-desc {
+            font-size: 13.5px;
+            color: #525151;
+            line-height: 1.75;
+            margin: 0 0 14px;
+          }
+
+          /* Feature bullets */
+          .mob-feats {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 16px;
+          }
+
           .mob-feat {
-            display: flex; align-items: center; gap: 10px;
-            padding: 9px 14px; border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
             background: #F8F8FC;
             border: 1px solid #EEEEEE;
           }
+
           .mob-feat-dot {
-            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
             background: var(--step-color);
           }
+
           .mob-feat-txt {
-            font-size: 13px; font-weight: 500; color: #333;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #333;
           }
 
+          /* CTA button */
           .mob-btn {
-            display: inline-flex; align-items: center; gap: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
             font-family: 'Poppins', sans-serif;
-            font-size: 13px; font-weight: 700; color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
             background: linear-gradient(90deg, #31B978, #6D53A3);
-            border: none; cursor: pointer; text-decoration: none;
-            padding: 12px 22px; border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 12px 22px;
+            border-radius: 50px;
             box-shadow: 0 6px 20px rgba(109,83,163,0.28);
-            width: 100%; justify-content: center;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
           }
 
-          .mob-finish-banner {
-            margin: 4px 20px 0;
-            padding: 20px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #FFF0F9, #F0EAFF);
-            border: 1px solid rgba(109,83,163,0.12);
-            text-align: center;
+          .mob-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(109,83,163,0.36);
           }
-          .mob-finish-emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+
+          /* ── FINISH BANNER ── */
+          .mob-finish-banner {
+            margin: 8px 16px 0;
+            padding: 24px 20px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #FFF0F9, #F0EAFF);
+            border: 1.5px solid rgba(109,83,163,0.14);
+            text-align: center;
+            box-shadow: 0 8px 28px rgba(109,83,163,0.10);
+          }
+
+          .mob-finish-emoji {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+          }
+
           .mob-finish-txt {
             font-family: 'Poppins', sans-serif;
-            font-size: 14px; font-weight: 600; color: #6D53A3;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6D53A3;
+            line-height: 1.6;
+            margin: 0;
           }
         }
 
@@ -811,7 +1127,7 @@ export default function HowItWorks() {
         @media (max-width: 600px) {
           .hiw-h2 { font-size: 26px; letter-spacing: -0.5px; }
           .hiw-hdr { padding: 64px 20px 40px; }
-          .mob-card { padding: 0 14px; }
+          .mob-cards-wrap { padding: 24px 12px 40px; }
         }
       `}</style>
 
@@ -832,7 +1148,9 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        {/* ── DESKTOP: sticky scroll ── */}
+        {/* ══════════════════════════════════════════
+            DESKTOP: sticky scroll (UNCHANGED)
+            ══════════════════════════════════════════ */}
         <div className="hiw-scroll" ref={scrollRef}>
           <div className="hiw-sticky">
             <div className="hiw-grid">
@@ -892,41 +1210,21 @@ export default function HowItWorks() {
                       preserveAspectRatio="xMidYMid meet"
                     />
 
-                    {/* ── START/END dot at 270° (top) — drawn before step dots so step-01 sits on top ── */}
                     <g>
-                      <circle
-                        cx={startDotPt.x}
-                        cy={startDotPt.y}
-                        r={18}
-                        fill="none"
-                        stroke="rgba(49,185,120,0.3)"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx={startDotPt.x}
-                        cy={startDotPt.y}
-                        r={10}
+                      <circle cx={startDotPt.x} cy={startDotPt.y} r={18}
+                        fill="none" stroke="rgba(49,185,120,0.3)" strokeWidth="2" />
+                      <circle cx={startDotPt.x} cy={startDotPt.y} r={10}
                         fill="url(#hArc2)"
                         opacity={active === 0 ? 0 : 0.85}
-                        style={{ transition: "opacity 0.3s" }}
-                      />
-                      <text
-                        x={startDotPt.x}
-                        y={startDotPt.y - 26}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize="9"
-                        fontWeight="700"
-                        fontFamily="Poppins,sans-serif"
-                        fill="#6D53A3"
-                        opacity="0.5"
-                        letterSpacing="1.5"
-                      >
+                        style={{ transition: "opacity 0.3s" }} />
+                      <text x={startDotPt.x} y={startDotPt.y - 26}
+                        textAnchor="middle" dominantBaseline="central"
+                        fontSize="9" fontWeight="700" fontFamily="Poppins,sans-serif"
+                        fill="#6D53A3" opacity="0.5" letterSpacing="1.5">
                         START
                       </text>
                     </g>
 
-                    {/* ── STEP DOTS ── */}
                     {DOT_ANGS.map((ang, i) => {
                       const p = ptOn(TR, ang);
                       const isFilled = i <= filledUpTo;
@@ -968,7 +1266,6 @@ export default function HowItWorks() {
                       );
                     })}
 
-                    {/* ── PLANE ── */}
                     <g transform={`translate(${planePt.x},${planePt.y}) rotate(${planeRot})`}>
                       <circle r="22" fill="rgba(36,20,79,0.12)" transform="translate(2,3)" />
                       <circle r="20" fill="white"
@@ -993,7 +1290,6 @@ export default function HowItWorks() {
               <div className="hiw-right">
                 <div className="hiw-content">
 
-                  {/* Progress bar */}
                   <div className="hiw-prog-wrap">
                     <div className="hiw-prog-label">
                       <span>Your Journey</span>
@@ -1005,7 +1301,6 @@ export default function HowItWorks() {
                     </div>
                   </div>
 
-                  {/* Step badge */}
                   <AnimatePresence mode="wait">
                     <motion.div key={`badge${active}`}
                       initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
@@ -1017,7 +1312,6 @@ export default function HowItWorks() {
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* Icon + Title */}
                   <AnimatePresence mode="wait">
                     <motion.div key={`top${active}`} className="hiw-top"
                       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -1037,7 +1331,6 @@ export default function HowItWorks() {
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* Description */}
                   <AnimatePresence mode="wait">
                     <motion.p key={`desc${active}`} className="hiw-desc"
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -1046,7 +1339,6 @@ export default function HowItWorks() {
                     </motion.p>
                   </AnimatePresence>
 
-                  {/* Feature bullets */}
                   <AnimatePresence mode="wait">
                     <motion.div key={`feats${active}`} className="hiw-feats"
                       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -1063,7 +1355,6 @@ export default function HowItWorks() {
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* CTA */}
                   <AnimatePresence mode="wait">
                     <motion.div key={`cta${active}`} className="hiw-cta-row"
                       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -1095,32 +1386,57 @@ export default function HowItWorks() {
           </div>
         </div>
 
-        {/* ── MOBILE: card stack ── */}
+        {/* ══════════════════════════════════════════
+            MOBILE: scroll-driven card stack
+            ══════════════════════════════════════════ */}
         <div className="hiw-mobile-section">
-          <div className="mob-progress">
+
+          {/* Sticky progress bar */}
+          <div className="mob-progress-bar-wrap">
+            <div className="mob-progress-header">
+              <span className="mob-progress-title">Your Journey</span>
+              <span className="mob-progress-counter">
+                {mobActive + 1} / {STEPS.length}
+              </span>
+            </div>
+            <div className="mob-progress-dots">
+              {STEPS.map((s, i) => {
+                const isDone = mobCompleted.includes(i);
+                const isAct = i === mobActive;
+                return (
+                  <div
+                    key={i}
+                    className={`mob-prog-seg ${isAct ? "mob-prog-seg--active" : ""} ${isDone ? "mob-prog-seg--done" : ""}`}
+                  >
+                    <div
+                      className="mob-prog-seg-fill"
+                      style={{
+                        background: `linear-gradient(90deg, ${s.color}, ${STEPS[Math.min(i + 1, STEPS.length - 1)].color})`,
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card stack */}
+          <div className="mob-cards-wrap">
             {STEPS.map((s, i) => (
-              <div
+              <MobileStepCard
                 key={i}
-                className="mob-prog-dot"
-                style={{
-                  width: 28,
-                  background: s.color,
-                  opacity: 0.35,
-                }}
+                step={s}
+                index={i}
+                feats={STEP_FEATURES[i]}
+                illus={C_ILLUS[i]}
+                isActive={mobActive === i}
+                isCompleted={mobCompleted.includes(i)}
+                cardRef={(el) => { cardRefs.current[i] = el; }}
               />
             ))}
           </div>
 
-          {STEPS.map((s, i) => (
-            <MobileStepCard
-              key={i}
-              step={s}
-              index={i}
-              feats={STEP_FEATURES[i]}
-              illus={C_ILLUS[i]}
-            />
-          ))}
-
+          {/* Finish banner */}
           <div className="mob-finish-banner">
             <span className="mob-finish-emoji">🎓</span>
             <p className="mob-finish-txt">
@@ -1128,6 +1444,7 @@ export default function HowItWorks() {
               <strong>Your turn starts today.</strong>
             </p>
           </div>
+
         </div>
 
       </div>

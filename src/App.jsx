@@ -13,6 +13,8 @@ import EligibilityChecker from "./pages/EligibilityChecker";
 import BudgetCalculator from "./pages/BudgetCalculator";
 import CompareColleges from "./pages/CompareColleges";
 import CountryFitQuiz from "./pages/CountryFitQuiz";
+import StudyDestination from "./pages/StudyDestination";
+import Contact from "./pages/Contact";
 
 
 function App() {
@@ -41,6 +43,8 @@ function App() {
         <Route path="/budget-calculator" element={<BudgetCalculator />} />
         <Route path="/compare-colleges" element={<CompareColleges />} />
         <Route path="/country-fit-quiz" element={<CountryFitQuiz />} />
+        <Route path="/study-destination" element={<StudyDestination/>} />
+        <Route path="/contact" element={<Contact/>} />     
       </Routes>
 
       <Footer />
