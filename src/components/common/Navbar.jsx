@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { to: "/",          label: "Home",    exact: true },
   { to: "/about",     label: "About"               },
   { to: "/courses",   label: "Courses"             },
+  { to: "/study-india", label: "StudyIndia" },
   { to: "/study-destination", label: "StudyDestination"           },
 ];
 

@@ -13,7 +13,6 @@
 
   --secondary: #ff5b5c; /* Coral Red Accent */
   --secondary-light: #ffe9e9;
-
   --accent-green: #31b978; /* Gradient Green */
   --accent-pink: #f92596;
   --accent-blue: #39c0fa;
@@ -95,6 +94,7 @@
   --radius-xl: 32px;
 
   /* ========================================
+  
      TRANSITIONS
   ======================================== */
 

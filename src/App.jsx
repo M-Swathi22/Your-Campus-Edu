@@ -15,7 +15,7 @@ import CompareColleges from "./pages/CompareColleges";
 import CountryFitQuiz from "./pages/CountryFitQuiz";
 import StudyDestination from "./pages/StudyDestination";
 import Contact from "./pages/Contact";
-
+import StudyIndia from "./pages/StudyIndia";
 
 function App() {
   const location = useLocation();
@@ -44,7 +44,8 @@ function App() {
         <Route path="/compare-colleges" element={<CompareColleges />} />
         <Route path="/country-fit-quiz" element={<CountryFitQuiz />} />
         <Route path="/study-destination" element={<StudyDestination/>} />
-        <Route path="/contact" element={<Contact/>} />     
+        <Route path="/contact" element={<Contact/>} />   
+        <Route path="/study-india" element={<StudyIndia />} />  
       </Routes>
 
       <Footer />
