@@ -184,7 +184,7 @@ export const courseCategories = [
       
     },
     {
-      name: "B.Sc Clinical Nutrition",
+      name: "B.Sc Medical Microbiology",
       duration: "3 Years"
       
     }

@@ -109,14 +109,20 @@ export default function TopStates() {
         .top-states__grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 28px;
+          gap: 22px;
+        }
+        @media (min-width: 480px) {
+          .top-states__grid { gap: 26px; }
         }
         @media (min-width: 640px) {
-          .top-states__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+          .top-states__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; }
+        }
+        @media (min-width: 1024px) {
+          .top-states__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
         }
 
         .state-card {
-          aspect-ratio: 1 / 1;
+          aspect-ratio: 4 / 5;
           display: flex;
           flex-direction: column;
           border-radius: var(--radius-lg);
@@ -124,6 +130,9 @@ export default function TopStates() {
           box-shadow: var(--shadow-md);
           overflow: hidden;
           transition: var(--transition);
+        }
+        @media (min-width: 640px) {
+          .state-card { aspect-ratio: 1 / 1; }
         }
         .state-card:hover {
           transform: translateY(-8px) rotate(-0.6deg);
@@ -137,7 +146,7 @@ export default function TopStates() {
           text-decoration: none;
         }
 
-        /* photo — roughly two-thirds of the square */
+        /* photo — roughly two-thirds of the card */
         .state-card__image {
           position: relative;
           flex: 1 1 auto;
@@ -162,25 +171,33 @@ export default function TopStates() {
 
         .state-card__code {
           position: absolute;
-          top: 12px;
-          left: 12px;
+          top: 10px;
+          left: 10px;
           z-index: 1;
-          padding: 5px 11px;
+          padding: 4px 10px;
           border-radius: var(--radius-sm);
-          font-size: 12.5px;
+          font-size: 11.5px;
           font-weight: 700;
           letter-spacing: 0.04em;
           color: var(--text-white);
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
         }
+        @media (min-width: 640px) {
+          .state-card__code {
+            top: 14px;
+            left: 14px;
+            padding: 5px 12px;
+            font-size: 12.5px;
+          }
+        }
 
         .state-card__gate {
           position: absolute;
-          top: 12px;
-          right: 12px;
+          top: 10px;
+          right: 10px;
           z-index: 1;
-          width: 30px;
-          height: 30px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -190,6 +207,14 @@ export default function TopStates() {
           backdrop-filter: blur(3px);
           transition: var(--transition);
         }
+        @media (min-width: 640px) {
+          .state-card__gate {
+            top: 14px;
+            right: 14px;
+            width: 32px;
+            height: 32px;
+          }
+        }
         .state-card:hover .state-card__gate {
           transform: rotate(45deg);
         }
@@ -198,57 +223,81 @@ export default function TopStates() {
         .state-card__stub {
           position: relative;
           flex: 0 0 auto;
-          padding: 24px 20px 20px;
+          padding: 18px 16px 16px;
           background: var(--bg-main);
           clip-path: polygon(
-            0% 10px, 6.25% 0, 12.5% 10px, 18.75% 0, 25% 10px, 31.25% 0,
-            37.5% 10px, 43.75% 0, 50% 10px, 56.25% 0, 62.5% 10px, 68.75% 0,
-            75% 10px, 81.25% 0, 87.5% 10px, 93.75% 0, 100% 10px,
+            0% 8px, 6.25% 0, 12.5% 8px, 18.75% 0, 25% 8px, 31.25% 0,
+            37.5% 8px, 43.75% 0, 50% 8px, 56.25% 0, 62.5% 8px, 68.75% 0,
+            75% 8px, 81.25% 0, 87.5% 8px, 93.75% 0, 100% 8px,
             100% 100%, 0% 100%
           );
           margin-top: -1px;
         }
+        @media (min-width: 640px) {
+          .state-card__stub {
+            padding: 26px 22px 22px;
+            clip-path: polygon(
+              0% 10px, 6.25% 0, 12.5% 10px, 18.75% 0, 25% 10px, 31.25% 0,
+              37.5% 10px, 43.75% 0, 50% 10px, 56.25% 0, 62.5% 10px, 68.75% 0,
+              75% 10px, 81.25% 0, 87.5% 10px, 93.75% 0, 100% 10px,
+              100% 100%, 0% 100%
+            );
+          }
+        }
 
         .state-card__name {
-          font-size: 19px;
+          font-size: clamp(15px, 3.6vw, 20px);
           font-weight: 700;
           line-height: 1.2;
         }
 
         .state-card__city {
-          margin-top: 6px;
+          margin-top: 5px;
           display: flex;
           align-items: center;
           gap: 5px;
-          font-size: 13px;
+          font-size: clamp(11.5px, 2.6vw, 13.5px);
           color: var(--text-medium);
         }
 
         .state-card__count {
-          margin-top: 14px;
+          margin-top: 10px;
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          padding: 6px 11px;
+          padding: 5px 10px;
           border-radius: var(--radius-sm);
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
           white-space: nowrap;
+        }
+        @media (min-width: 640px) {
+          .state-card__count {
+            margin-top: 14px;
+            padding: 6px 11px;
+            font-size: 12px;
+          }
         }
 
         .view-all-btn {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 14px 30px;
+          padding: 13px 26px;
           border-radius: 999px;
           background: var(--gradient-primary);
           color: var(--text-white);
-          font-size: 14.5px;
+          font-size: 14px;
           font-weight: 600;
           text-decoration: none;
           box-shadow: var(--shadow-sm);
           transition: var(--transition);
+        }
+        @media (min-width: 640px) {
+          .view-all-btn {
+            padding: 14px 30px;
+            font-size: 14.5px;
+          }
         }
         .view-all-btn:hover {
           transform: translateY(-2px);
@@ -259,6 +308,15 @@ export default function TopStates() {
         }
         .view-all-btn:hover svg {
           transform: translateX(3px);
+        }
+
+        @media (max-width: 639px) {
+          .top-states__inner {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+            padding-top: 56px !important;
+            padding-bottom: 56px !important;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {

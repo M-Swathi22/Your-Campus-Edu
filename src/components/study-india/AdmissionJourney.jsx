@@ -84,9 +84,9 @@ function buildRibbon({ pin, angle, halfWidth, bunch, total }) {
     "Z",
   ].join(" ");
 
-  const labelPos = { 
-    x: pin.x + dir.x * (bunch + 15), 
-    y: pin.y + dir.y * (bunch + 15) 
+  const labelPos = {
+    x: pin.x + dir.x * (bunch + 15),
+    y: pin.y + dir.y * (bunch + 15),
   };
 
   return { d, T, labelPos, angle };
@@ -101,20 +101,20 @@ const TARGET_CX = 95;
 const TARGET_CY = 250;
 const ELLIPSES = [
   { rx: 32, ry: 100, color: "var(--accent-blue)" },
-  { rx: 25, ry: 80,  color: "var(--white)" },
-  { rx: 18, ry: 60,  color: "var(--accent-blue)" },
-  { rx: 11, ry: 40,  color: "var(--white)" },
-  { rx: 5,  ry: 20,  color: "var(--accent-blue)" },
+  { rx: 25, ry: 80, color: "var(--white)" },
+  { rx: 18, ry: 60, color: "var(--accent-blue)" },
+  { rx: 11, ry: 40, color: "var(--white)" },
+  { rx: 5, ry: 20, color: "var(--accent-blue)" },
 ];
 
 export default function AdmissionProcess() {
   return (
     <section
-      className="relative w-full py-20 px-6 lg:px-16 overflow-hidden"
+      className="relative w-full py-16 px-5 sm:py-20 sm:px-6 lg:px-16 overflow-hidden"
       style={{ background: "var(--bg-main)", fontFamily: "var(--font-main)" }}
     >
       {/* Header section */}
-      <div className="max-w-3xl mx-auto text-center mb-20">
+      <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-20">
         {/* Eyebrow */}
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5"
@@ -135,10 +135,10 @@ export default function AdmissionProcess() {
 
         {/* Heading */}
         <h2
-          className="font-extrabold uppercase leading-tight whitespace-nowrap"
+          className="font-extrabold uppercase leading-tight"
           style={{
-            fontSize: "clamp(1.6rem, 3.5vw, 2.4rem)",
-            letterSpacing: "1.5px",
+            fontSize: "clamp(1.5rem, 5vw, 2.4rem)",
+            letterSpacing: "1px",
             color: "var(--primary-dark)",
           }}
         >
@@ -172,7 +172,7 @@ export default function AdmissionProcess() {
           style={{
             maxWidth: "700px",
             color: "var(--text-light)",
-            fontSize: "16px",
+            fontSize: "15.5px",
             lineHeight: "1.8",
           }}
         >
@@ -182,37 +182,32 @@ export default function AdmissionProcess() {
         </p>
       </div>
 
-      {/* SVG Canvas Container */}
-      <div className="max-w-6xl mx-auto overflow-x-auto scrollbar-none">
+      {/* ============ DESKTOP / TABLET: SVG TARGET DIAGRAM ============ */}
+      <div className="hidden lg:block max-w-6xl mx-auto overflow-x-auto scrollbar-none">
         <svg
           viewBox="0 0 920 500"
           className="w-full min-w-[840px] h-auto block"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* ============ 3D TARGET (LEFT SIDE) ============ */}
+          {/* 3D TARGET (LEFT SIDE) */}
           <g>
-            {/* Thick 3D Side Depth Plate */}
             <ellipse cx={TARGET_CX + 8} cy={TARGET_CY} rx="32" ry="100" fill="var(--border)" />
             <rect x={TARGET_CX} y={TARGET_CY - 100} width="8" height="200" fill="var(--border)" />
-            
-            {/* Concentric Rings */}
             {ELLIPSES.map((el, i) => (
               <ellipse key={i} cx={TARGET_CX} cy={TARGET_CY} rx={el.rx} ry={el.ry} fill={el.color} />
             ))}
           </g>
 
-          {/* ============ PIERCING ARROW SHAFT ============ */}
+          {/* PIERCING ARROW SHAFT */}
           <g>
-            {/* Fine needle tip penetrating target center */}
-            <line 
-              x1={TARGET_CX} 
-              y1={TARGET_CY} 
-              x2={PIN.x - 55} 
-              y2={TARGET_CY} 
-              stroke="var(--text-light)" 
-              strokeWidth="2.5" 
+            <line
+              x1={TARGET_CX}
+              y1={TARGET_CY}
+              x2={PIN.x - 55}
+              y2={TARGET_CY}
+              stroke="var(--text-light)"
+              strokeWidth="2.5"
             />
-            {/* Plastic connector barrel adapter */}
             <path
               d={`M ${PIN.x - 55} ${TARGET_CY - 10} 
                   L ${PIN.x - 22} ${TARGET_CY - 10} 
@@ -222,7 +217,6 @@ export default function AdmissionProcess() {
                   L ${PIN.x - 55} ${TARGET_CY + 10} Z`}
               fill="var(--border)"
             />
-            {/* Darker cap piece securing ribbon bundles */}
             <path
               d={`M ${PIN.x - 14} ${TARGET_CY - 5} 
                   L ${PIN.x} ${TARGET_CY - 5} 
@@ -232,7 +226,7 @@ export default function AdmissionProcess() {
             />
           </g>
 
-          {/* ============ RIBBONS & SIDE DESCRIPTIONS ============ */}
+          {/* RIBBONS & SIDE DESCRIPTIONS */}
           {RIBBONS.map((r, i) => (
             <motion.g
               key={r.label}
@@ -241,10 +235,8 @@ export default function AdmissionProcess() {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
             >
-              {/* Ribbon Body Layer */}
               <path d={r.d} fill={r.color} style={{ filter: "drop-shadow(var(--shadow-sm))" }} />
-              
-              {/* Rotated Internal Label Text */}
+
               <text
                 x={r.labelPos.x}
                 y={r.labelPos.y}
@@ -259,7 +251,6 @@ export default function AdmissionProcess() {
                 {r.label}
               </text>
 
-              {/* Clean Horizontal Text Layout on Right Side */}
               <foreignObject x={r.T.x + 25} y={r.T.y - 30} width="270" height="70">
                 <div
                   xmlns="http://www.w3.org/1999/xhtml"
@@ -280,6 +271,80 @@ export default function AdmissionProcess() {
             </motion.g>
           ))}
         </svg>
+      </div>
+
+      {/* ============ MOBILE / SMALL TABLET: VERTICAL TIMELINE ============ */}
+      <div className="lg:hidden max-w-md mx-auto">
+        <div className="relative pl-2">
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "6px",
+              bottom: "6px",
+              left: "23px",
+              width: "2px",
+              background: "var(--border)",
+            }}
+          />
+
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={step.label}
+              className="relative flex gap-4 pb-9 last:pb-0"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.45, delay: i * 0.08, ease: "easeOut" }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  flexShrink: 0,
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  background: step.color,
+                  color: "var(--text-white)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  boxShadow: "var(--shadow-sm)",
+                }}
+              >
+                {i + 1}
+              </div>
+
+              <div className="pt-1.5">
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "12.5px",
+                    fontWeight: "700",
+                    letterSpacing: "0.06em",
+                    color: step.color,
+                    marginBottom: "4px",
+                  }}
+                >
+                  {step.label}
+                </span>
+                <p
+                  style={{
+                    fontSize: "13.5px",
+                    lineHeight: "1.6",
+                    color: "var(--text-medium)",
+                    margin: 0,
+                  }}
+                >
+                  {step.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

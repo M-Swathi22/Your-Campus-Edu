@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import * as Icons from "lucide-react";
 import { ArrowUpRight, ImageOff, BookMarked } from "lucide-react";
@@ -53,47 +54,48 @@ export default function PopularCourses() {
             return (
               <motion.div
                 key={cat.id}
-                className="pc-card"
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 26 }}
                 whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.45, delay: i * 0.05 }}
               >
-                {/* ── Pass panel: image + icon chip + name ── */}
-                <div className="pc-card__panel">
-                  <CategoryImage src={cat.image} alt={cat.category} />
-                  <div className="pc-card__scrim" />
+                <Link
+                  to={`/study-india/${cat.id}`}
+                  className="pc-card"
+                  aria-label={`Explore ${cat.category} courses`}
+                >
+                  {/* ── Pass panel: image + icon chip + name ── */}
+                  <div className="pc-card__panel">
+                    <CategoryImage src={cat.image} alt={cat.category} />
+                    <div className="pc-card__scrim" />
 
-                  <span className="pc-card__icon-chip">
-                    <Icon size={16} />
-                  </span>
-
-                  <h3 className="pc-card__name">{cat.category}</h3>
-                </div>
-
-                {/* ── Perforated die-cut divider ── */}
-                <div className="pc-card__perforation">
-                  <span className="pc-card__notch pc-card__notch--left" />
-                  <span className="pc-card__notch pc-card__notch--right" />
-                </div>
-
-                {/* ── Stub: course count + CTA ── */}
-                <div className="pc-card__stub">
-                  <div className="pc-card__stub-count">
-                    <span className="pc-card__count-number">{cat.courseCount}</span>
-                    <span className="pc-card__count-label">
-                      {cat.courseCount === 1 ? "Course" : "Courses"}&nbsp;Available
+                    <span className="pc-card__icon-chip">
+                      <Icon size={16} />
                     </span>
+
+                    <h3 className="pc-card__name">{cat.category}</h3>
                   </div>
 
-                  <button
-                    className="pc-card__cta"
-                    type="button"
-                    aria-label={`Explore ${cat.category} courses`}
-                  >
-                    <ArrowUpRight size={18} className="pc-card__cta-icon" />
-                  </button>
-                </div>
+                  {/* ── Perforated die-cut divider ── */}
+                  <div className="pc-card__perforation">
+                    <span className="pc-card__notch pc-card__notch--left" />
+                    <span className="pc-card__notch pc-card__notch--right" />
+                  </div>
+
+                  {/* ── Stub: course count + CTA ── */}
+                  <div className="pc-card__stub">
+                    <div className="pc-card__stub-count">
+                      <span className="pc-card__count-number">{cat.courseCount}</span>
+                      <span className="pc-card__count-label">
+                        {cat.courseCount === 1 ? "Course" : "Courses"}&nbsp;Available
+                      </span>
+                    </div>
+
+                    <span className="pc-card__cta" aria-hidden="true">
+                      <ArrowUpRight size={18} className="pc-card__cta-icon" />
+                    </span>
+                  </div>
+                </Link>
               </motion.div>
             );
           })}
@@ -165,6 +167,7 @@ export default function PopularCourses() {
           border: 1px solid var(--border);
           box-shadow: var(--shadow-sm);
           cursor: pointer;
+          text-decoration: none;
           transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
             box-shadow 0.35s ease, border-color 0.35s ease;
         }
@@ -173,7 +176,7 @@ export default function PopularCourses() {
           border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
           box-shadow: var(--shadow-lg);
         }
-        .pc-card:focus-within {
+        .pc-card:focus-visible {
           outline: 2px solid var(--primary);
           outline-offset: 3px;
         }
@@ -308,17 +311,14 @@ export default function PopularCourses() {
           border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
           background: var(--primary-light);
           color: var(--primary);
-          cursor: pointer;
           transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease,
             box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .pc-card__cta:hover {
+        .pc-card:hover .pc-card__cta {
           background: var(--gradient-primary);
           border-color: transparent;
           color: var(--text-white);
           box-shadow: var(--shadow-md);
-        }
-        .pc-card:hover .pc-card__cta {
           transform: rotate(45deg);
         }
         .pc-card__cta-icon {
