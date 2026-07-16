@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ArrowUpRight } from "lucide-react";
 
@@ -10,10 +11,18 @@ import { Clock, ArrowUpRight } from "lucide-react";
  * barcode. The filter row is a sliding-pill selector (one shared background
  * gliding between tabs) instead of static toggle buttons.
  *
- * Background updated to a premium dark surface (var(--bg-dark)) with soft
- * ambient glows in the brand gradient colors, and cards moved to a glass
- * treatment so the ticket-stub signature reads as elevated, not flat.
+ * Each card now links through to CourseDetails at
+ * /study-india/:categoryId/:courseSlug.
  */
+
+const slugify = (str = "") =>
+  str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+const MotionCardLink = motion(Link);
+
 export default function CourseExplorer({ category, data }) {
   const levels = useMemo(() => {
     const unique = Array.from(new Set(data.courses.map((c) => c.level)));
@@ -74,8 +83,9 @@ export default function CourseExplorer({ category, data }) {
             {filtered.map((course, i) => {
               const rank = levelRank.map[course.level] || 1;
               return (
-                <motion.article
+                <MotionCardLink
                   key={course.name}
+                  to={`/study-india/${category.id}/${slugify(course.name)}`}
                   className="course-explorer__card"
                   layout
                   initial={{ opacity: 0, y: 16 }}
@@ -113,13 +123,13 @@ export default function CourseExplorer({ category, data }) {
                         ))}
                       </div>
 
-                      <a href="#" className="course-explorer__link">
+                      <span className="course-explorer__link">
                         Syllabus
                         <ArrowUpRight size={14} aria-hidden="true" />
-                      </a>
+                      </span>
                     </div>
                   </div>
-                </motion.article>
+                </MotionCardLink>
               );
             })}
           </AnimatePresence>
@@ -244,12 +254,18 @@ export default function CourseExplorer({ category, data }) {
           border-radius: var(--radius-lg);
           overflow: hidden;
           transition: var(--transition);
+          text-decoration: none;
+          cursor: pointer;
         }
         .course-explorer__card:hover {
           transform: translateY(-3px);
           box-shadow: var(--shadow-lg);
           border-color: color-mix(in srgb, var(--accent-green) 45%, transparent);
           background: color-mix(in srgb, var(--text-white) 6%, transparent);
+        }
+        .course-explorer__card:focus-visible {
+          outline: 2px solid var(--accent-green);
+          outline-offset: 2px;
         }
 
         .course-explorer__rail {
@@ -370,10 +386,8 @@ export default function CourseExplorer({ category, data }) {
           font-weight: 600;
           font-size: 0.8rem;
           color: color-mix(in srgb, var(--text-white) 78%, transparent);
-          text-decoration: none;
-          transition: var(--transition);
         }
-        .course-explorer__link:hover {
+        .course-explorer__card:hover .course-explorer__link {
           color: var(--accent-green);
           gap: 0.45rem;
         }

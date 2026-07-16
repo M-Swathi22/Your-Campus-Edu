@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Menu, X, ChevronDown, UserPlus, Sparkles,
+  Menu, X, ChevronDown, ChevronRight, UserPlus, Sparkles,
   Target, CheckCircle, Wallet, BarChart2, Globe,
   ArrowRight, Zap,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
+
+// NOTE: adjust these two import paths to match where the files actually live
+// in your project (they were referenced as indianCourses.js / categoryData.js).
+import { courseCategories } from "../../data/indianCourses";
+import { categoryData } from "../../data/categoryData";
 
 /* =========================================
    DATA
@@ -16,13 +21,17 @@ const AI_ROUTES = [
   "/budget-calculator", "/compare-colleges", "/country-fit-quiz",
 ];
 
-const NAV_LINKS = [
-  { to: "/",          label: "Home",    exact: true },
-  { to: "/about",     label: "About"               },
-  { to: "/courses",   label: "Courses"             },
-  { to: "/study-india", label: "StudyIndia" },
-  { to: "/study-destination", label: "StudyDestination"           },
+const NAV_LINKS_LEFT = [
+  { to: "/",        label: "Home",    exact: true },
+  { to: "/about",   label: "About"               },
+  { to: "/courses", label: "Courses"             },
 ];
+
+const NAV_LINKS_RIGHT = [
+  { to: "/study-destination", label: "StudyDestination" },
+];
+
+const ALL_SIMPLE_LINKS = [...NAV_LINKS_LEFT, ...NAV_LINKS_RIGHT];
 
 // AI sub-tools only (no /ai-tools page link here — handled separately)
 const AI_ITEMS = [
@@ -34,12 +43,14 @@ const AI_ITEMS = [
 ];
 
 // Hover-intent timing — tuned for natural mouse movement
-const OPEN_DELAY  = 60;   // ms before opening on enter (avoids accidental flicks)
-const CLOSE_DELAY = 220;  // ms before closing on leave (survives the gap + diagonal moves)
+const OPEN_DELAY   = 60;   // ms before opening on enter (avoids accidental flicks)
+const CLOSE_DELAY  = 220;  // ms before closing on leave (survives the gap + diagonal moves)
+const CAT_SWITCH_DELAY = 60; // ms debounce when sweeping across category rows
 
 function getActiveLink(pathname) {
   if (AI_ROUTES.includes(pathname)) return "__ai__";
-  const match = [...NAV_LINKS, { to: "/contact" }].find((item) =>
+  if (pathname === "/study-india" || pathname.startsWith("/study-india/")) return "__study__";
+  const match = [...ALL_SIMPLE_LINKS, { to: "/contact" }].find((item) =>
     item.exact ? pathname === item.to : pathname.startsWith(item.to)
   );
   return match ? match.to : null;
@@ -287,7 +298,7 @@ const styles = `
   }
   .nb__chevron.open { transform: rotate(180deg); }
 
-  /* ─── DROPDOWN ───────────────────────────── */
+  /* ─── DROPDOWN (AI) ──────────────────────── */
   .nb__dropdown {
     position: absolute;
     top: calc(100% + 14px);
@@ -562,6 +573,256 @@ const styles = `
     background: rgba(255,255,255,0.22);
   }
 
+  /* ─── STUDY INDIA TRIGGER ────────────────── */
+  .nb__studyWrap {
+    position: relative;
+    padding-bottom: 14px;
+    margin-bottom: -14px;
+  }
+  .nb__studyBtn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 15px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-medium);
+    font-family: var(--font-main);
+    white-space: nowrap;
+    letter-spacing: 0.05px;
+    isolation: isolate;
+    transition: color 0.2s ease;
+  }
+  .nb__studyBtn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: var(--primary-light);
+    transform: scale(0.85);
+    opacity: 0;
+    transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;
+    z-index: -1;
+  }
+  .nb__studyBtn:hover::before, .nb__studyBtn.active::before {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .nb__studyBtn:hover, .nb__studyBtn.active { color: var(--primary); }
+  .nb__studyBtn::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 18px;
+    height: 2px;
+    border-radius: 99px;
+    background: var(--gradient-primary);
+    transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    transform-origin: center;
+  }
+  .nb__studyBtn.active::after, .nb__studyBtn:hover::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  /* ─── STUDY INDIA MEGA DROPDOWN ──────────── */
+  .nb__studyDropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    width: 640px;
+    max-width: 90vw;
+    display: flex;
+    background: var(--bg-main);
+    border: 1px solid color-mix(in srgb, var(--primary) 9%, transparent);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    gap: 4px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--primary) 4%, transparent),
+      var(--shadow-md),
+      var(--shadow-lg);
+    transform-origin: top center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(-8px) scale(0.96);
+    transition:
+      opacity 0.18s ease,
+      transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+      visibility 0s linear 0.22s;
+  }
+  .nb__studyDropdown.nb__studyDropdown--open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0) scale(1);
+    transition:
+      opacity 0.2s ease,
+      transform 0.26s cubic-bezier(0.34,1.56,0.64,1),
+      visibility 0s linear 0s;
+  }
+
+  .nb__studyCats {
+    width: 236px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .nb__studyCatItem {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    isolation: isolate;
+    transition: background 0.2s ease;
+  }
+  .nb__studyCatItem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--cat-accent) 10%, var(--primary-light));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+  }
+  .nb__studyCatItem:hover::before,
+  .nb__studyCatItem.active::before { opacity: 1; }
+  .nb__studyCatLabel {
+    flex: 1;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-family: var(--font-main);
+    line-height: 1.3;
+  }
+  .nb__studyCatItem:hover .nb__studyCatLabel,
+  .nb__studyCatItem.active .nb__studyCatLabel { color: var(--primary); }
+  .nb__studyCatCount {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-light);
+    background: var(--bg-light);
+    padding: 2px 7px;
+    border-radius: 99px;
+    flex-shrink: 0;
+  }
+  .nb__studyCatArrow {
+    color: var(--text-light);
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateX(-3px);
+    transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  }
+  .nb__studyCatItem:hover .nb__studyCatArrow,
+  .nb__studyCatItem.active .nb__studyCatArrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--primary);
+  }
+
+  .nb__studyDivider2 {
+    width: 1px;
+    align-self: stretch;
+    background: linear-gradient(to bottom, transparent, var(--border), transparent);
+    flex-shrink: 0;
+  }
+
+  .nb__studyCourses {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 4px 4px 12px;
+  }
+  .nb__studyCourseHead { padding: 4px 4px 8px; }
+  .nb__studyCourseHeadTitle {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-family: var(--font-main);
+  }
+  .nb__studyCourseHeadSub {
+    font-size: 10.5px;
+    color: var(--text-light);
+    font-family: var(--font-main);
+  }
+  .nb__studyCourseList {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .nb__studyCourseItem {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 8px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.18s ease;
+  }
+  .nb__studyCourseItem:hover { background: var(--primary-light); }
+  .nb__studyCourseContent { display: flex; flex-direction: column; min-width: 0; }
+  .nb__studyCourseName {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-family: var(--font-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nb__studyCourseItem:hover .nb__studyCourseName { color: var(--primary); }
+  .nb__studyCourseMeta {
+    font-size: 10px;
+    color: var(--text-light);
+    font-family: var(--font-main);
+  }
+  .nb__studyCourseFooter {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px;
+    border-radius: 11px;
+    border: none;
+    background: var(--gradient-secondary);
+    color: var(--white);
+    font-size: 11.5px;
+    font-weight: 700;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+  }
+  .nb__studyCourseFooter:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
   /* ─── ACTIONS ────────────────────────────── */
   .nb__actions {
     display: flex;
@@ -674,6 +935,7 @@ const styles = `
     padding: 12px 16px 28px;
     max-height: calc(100svh - 74px);
     overflow-y: auto;
+    overflow-x: hidden;
     animation: nbMobileIn 0.25s ease both;
   }
   .nb__mobile.open { display: flex; }
@@ -827,7 +1089,7 @@ const styles = `
   }
   .nb__mAIBody.open { display: flex; animation: nbMobileIn 0.22s ease both; }
 
-  /* "View All AI Tools" row inside mobile accordion */
+  /* "View All" row shared by AI + Study accordions */
   .nb__mAIViewAll {
     display: flex;
     align-items: center;
@@ -924,6 +1186,121 @@ const styles = `
   }
   .nb__mAIItem:hover .nb__mAIArr { color: var(--primary); transform: translateX(2px); }
 
+  /* ─── MOBILE STUDY INDIA ACCORDION ────────── */
+  .nb__mStudyToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 14px;
+    border-radius: 14px;
+    background: var(--gradient-secondary);
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .nb__mStudyToggle::before {
+    content: '';
+    position: absolute;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--white) 6%, transparent);
+    top: -30px; right: -20px;
+    pointer-events: none;
+  }
+  .nb__mStudyToggleLeft { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+  .nb__mStudyToggleText { text-align: left; }
+  .nb__mStudyToggleTitle {
+    font-size: 13.5px; font-weight: 700; color: var(--white);
+    font-family: var(--font-main); display: block; line-height: 1.2;
+  }
+  .nb__mStudyToggleSub {
+    font-size: 10px; color: color-mix(in srgb, var(--white) 62%, transparent);
+    font-family: var(--font-main);
+  }
+
+  .nb__mStudyBody {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg-light);
+    border-radius: 0 0 14px 14px;
+    padding: 8px 8px 10px;
+    border: 1px solid color-mix(in srgb, var(--primary) 9%, transparent);
+    border-top: none;
+    margin-top: -4px;
+  }
+  .nb__mStudyBody.open { display: flex; animation: nbMobileIn 0.22s ease both; }
+
+  .nb__mCatWrap {
+    background: var(--white);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+  .nb__mCatRow { display: flex; align-items: stretch; }
+  .nb__mCatLink {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    text-decoration: none;
+    min-width: 0;
+  }
+  .nb__mCatText { display: flex; flex-direction: column; min-width: 0; }
+  .nb__mCatName {
+    font-size: 13px; font-weight: 700; color: var(--text-dark);
+    font-family: var(--font-main);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .nb__mCatCount { font-size: 10.5px; color: var(--text-light); font-family: var(--font-main); }
+  .nb__mCatChevronBtn {
+    width: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-light);
+    flex-shrink: 0;
+  }
+  .nb__mCourseList {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 6px 6px 46px;
+    max-height: 216px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-left: 2px solid var(--border);
+    margin-left: 16px;
+  }
+  .nb__mCourseItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+  }
+  .nb__mCourseItem:hover, .nb__mCourseItem:active { background: var(--primary-light); }
+  .nb__mCourseName {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-medium);
+    font-family: var(--font-main);
+    line-height: 1.35;
+  }
+  .nb__mCourseItem:hover .nb__mCourseName { color: var(--primary); }
+  .nb__mCourseMeta {
+    font-size: 10px; color: var(--text-light); font-family: var(--font-main);
+  }
+  @media (max-width: 380px) {
+    .nb__mCourseList { padding-left: 34px; margin-left: 10px; }
+  }
+
   /* mobile CTAs */
   .nb__mCtas { display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
 
@@ -997,12 +1374,24 @@ export default function Navbar() {
   const [mAiOpen, setMAiOpen]       = useState(false);
   const [scrolled, setScrolled]     = useState(false);
 
+  // Study India mega-menu state
+  const [studyOpen, setStudyOpen]           = useState(false);
+  const [studyActiveCat, setStudyActiveCat] = useState(courseCategories[0]?.id || null);
+  const [mStudyOpen, setMStudyOpen]         = useState(false);
+  const [mExpandedCat, setMExpandedCat]     = useState(null);
+
   const dropdownRef = useRef(null);
   const openTimer    = useRef(null);
   const closeTimer   = useRef(null);
 
+  const studyDropdownRef = useRef(null);
+  const studyOpenTimer   = useRef(null);
+  const studyCloseTimer  = useRef(null);
+  const catSwitchTimer   = useRef(null);
+
   const activeLink  = getActiveLink(location.pathname);
-  const isAiActive  = activeLink === "__ai__";
+  const isAiActive    = activeLink === "__ai__";
+  const isStudyActive = activeLink === "__study__";
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -1034,45 +1423,101 @@ export default function Navbar() {
     setAiOpen(false);
   }, [clearTimers]);
 
-  // Close dropdown on outside click (immediate — no delay needed here)
+  /* ── Study India hover-intent (same pattern as AI Tools) ── */
+  const clearStudyTimers = useCallback(() => {
+    if (studyOpenTimer.current)  { clearTimeout(studyOpenTimer.current);  studyOpenTimer.current  = null; }
+    if (studyCloseTimer.current) { clearTimeout(studyCloseTimer.current); studyCloseTimer.current = null; }
+  }, []);
+
+  const scheduleStudyOpen = useCallback(() => {
+    clearStudyTimers();
+    studyOpenTimer.current = setTimeout(() => setStudyOpen(true), OPEN_DELAY);
+  }, [clearStudyTimers]);
+
+  const scheduleStudyClose = useCallback(() => {
+    clearStudyTimers();
+    studyCloseTimer.current = setTimeout(() => setStudyOpen(false), CLOSE_DELAY);
+  }, [clearStudyTimers]);
+
+  const closeStudyImmediately = useCallback(() => {
+    clearStudyTimers();
+    setStudyOpen(false);
+  }, [clearStudyTimers]);
+
+  // Debounced category switch so sweeping the mouse down the list doesn't
+  // flicker the course panel on every pixel of movement
+  const handleCatHover = useCallback((id) => {
+    if (catSwitchTimer.current) clearTimeout(catSwitchTimer.current);
+    catSwitchTimer.current = setTimeout(() => setStudyActiveCat(id), CAT_SWITCH_DELAY);
+  }, []);
+
+  // When the panel opens while already on a category page, default the
+  // course list to that category instead of always the first one
+  useEffect(() => {
+    if (studyOpen) {
+      const match = location.pathname.match(/^\/study-india\/([^/]+)/);
+      if (match && courseCategories.some((c) => c.id === match[1])) {
+        setStudyActiveCat(match[1]);
+      }
+    }
+  }, [studyOpen, location.pathname]);
+
+  // Close dropdowns on outside click (immediate — no delay needed here)
   useEffect(() => {
     const fn = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         closeImmediately();
       }
+      if (studyDropdownRef.current && !studyDropdownRef.current.contains(e.target)) {
+        closeStudyImmediately();
+      }
     };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
-  }, [closeImmediately]);
+  }, [closeImmediately, closeStudyImmediately]);
 
   // Close on Escape for accessibility
   useEffect(() => {
     const fn = (e) => {
-      if (e.key === "Escape") closeImmediately();
+      if (e.key === "Escape") {
+        closeImmediately();
+        closeStudyImmediately();
+      }
     };
     document.addEventListener("keydown", fn);
     return () => document.removeEventListener("keydown", fn);
-  }, [closeImmediately]);
+  }, [closeImmediately, closeStudyImmediately]);
 
   // Close everything on route change
   useEffect(() => {
     setMobileOpen(false);
     closeImmediately();
+    closeStudyImmediately();
     setMAiOpen(false);
-  }, [location.pathname, closeImmediately]);
+    setMStudyOpen(false);
+    setMExpandedCat(null);
+  }, [location.pathname, closeImmediately, closeStudyImmediately]);
 
   // Cleanup timers on unmount
-  useEffect(() => () => clearTimers(), [clearTimers]);
+  useEffect(() => () => {
+    clearTimers();
+    clearStudyTimers();
+    if (catSwitchTimer.current) clearTimeout(catSwitchTimer.current);
+  }, [clearTimers, clearStudyTimers]);
 
   const closeAll = () => {
     setMobileOpen(false);
     closeImmediately();
+    closeStudyImmediately();
     setMAiOpen(false);
+    setMStudyOpen(false);
+    setMExpandedCat(null);
   };
 
-  // Navigate + close dropdown
+  // Navigate + close dropdowns
   const handleNavTo = (to) => {
     closeImmediately();
+    closeStudyImmediately();
     navigate(to);
   };
 
@@ -1086,6 +1531,19 @@ export default function Navbar() {
       navigate("/ai-tools");
     }
   };
+
+  const handleStudyTriggerClick = () => {
+    clearStudyTimers();
+    if (studyOpen) {
+      setStudyOpen(false);
+    } else {
+      setStudyOpen(true);
+      navigate("/study-india");
+    }
+  };
+
+  const activeCatMeta = courseCategories.find((c) => c.id === studyActiveCat);
+  const activeCatData = studyActiveCat ? categoryData[studyActiveCat] : null;
 
   return (
     <>
@@ -1110,7 +1568,110 @@ export default function Navbar() {
           {/* DESKTOP NAV */}
           <nav className="nb__desktop" aria-label="Main navigation">
 
-            {NAV_LINKS.map(({ to, label }) => (
+            {NAV_LINKS_LEFT.map(({ to, label, exact }) => (
+              <Link key={to} to={to}
+                className={`nb__link${activeLink === to ? " active" : ""}`}>
+                {label}
+              </Link>
+            ))}
+
+            <span className="nb__sep" aria-hidden="true" />
+
+            {/* STUDY INDIA — click goes straight to /study-india, hover reveals a
+                two-column mega menu: categories on the left, courses for the
+                hovered category on the right */}
+            <div
+              className="nb__studyWrap"
+              ref={studyDropdownRef}
+              onMouseEnter={scheduleStudyOpen}
+              onMouseLeave={scheduleStudyClose}
+            >
+              <button
+                className={`nb__studyBtn${isStudyActive || studyOpen ? " active" : ""}`}
+                onClick={handleStudyTriggerClick}
+                aria-expanded={studyOpen}
+                aria-haspopup="true"
+              >
+                <span style={{ position: "relative", zIndex: 1 }}>StudyIndia</span>
+                <ChevronDown size={13}
+                  className={`nb__chevron${studyOpen ? " open" : ""}`}
+                  aria-hidden="true" />
+              </button>
+
+              <div
+                className={`nb__studyDropdown${studyOpen ? " nb__studyDropdown--open" : ""}`}
+                role="menu"
+                onMouseEnter={scheduleStudyOpen}
+                onMouseLeave={scheduleStudyClose}
+              >
+                {/* Categories column */}
+                <div className="nb__studyCats">
+                  {courseCategories.map((cat) => {
+                    const isActiveCat = studyActiveCat === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        role="menuitem"
+                        className={`nb__studyCatItem${isActiveCat ? " active" : ""}`}
+                        style={{ "--cat-accent": `var(${cat.accent})`, border: "none" }}
+                        onMouseEnter={() => handleCatHover(cat.id)}
+                        onFocus={() => setStudyActiveCat(cat.id)}
+                        onClick={() => handleNavTo(`/study-india/${cat.id}`)}
+                      >
+                        <span className="nb__studyCatLabel">{cat.category}</span>
+                        <span className="nb__studyCatCount">{cat.courseCount}</span>
+                        <ChevronRight size={13} className="nb__studyCatArrow" aria-hidden="true" />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="nb__studyDivider2" aria-hidden="true" />
+
+                {/* Courses column — reflects the active/hovered category */}
+                <div className="nb__studyCourses">
+                  {activeCatMeta && activeCatData && (
+                    <>
+                      <div className="nb__studyCourseHead">
+                        <span className="nb__studyCourseHeadTitle">{activeCatMeta.category} Courses</span>
+                        <span className="nb__studyCourseHeadSub">
+                          {activeCatData.courses.length} programs available
+                        </span>
+                      </div>
+
+                      <div className="nb__studyCourseList">
+                        {activeCatData.courses.map((course) => (
+                          <button
+                            key={course.name}
+                            role="menuitem"
+                            className="nb__studyCourseItem"
+                            style={{ border: "none" }}
+                            onClick={() => handleNavTo(`/study-india/${activeCatMeta.id}`)}
+                          >
+                            <span className="nb__studyCourseContent">
+                              <span className="nb__studyCourseName">{course.name}</span>
+                              <span className="nb__studyCourseMeta">{course.duration} • {course.level}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        className="nb__studyCourseFooter"
+                        style={{ border: "none" }}
+                        onClick={() => handleNavTo(`/study-india/${activeCatMeta.id}`)}
+                      >
+                        View all {activeCatMeta.category} courses <ArrowRight size={12} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <span className="nb__sep" aria-hidden="true" />
+
+            {NAV_LINKS_RIGHT.map(({ to, label }) => (
               <Link key={to} to={to}
                 className={`nb__link${activeLink === to ? " active" : ""}`}>
                 {label}
@@ -1245,7 +1806,90 @@ export default function Navbar() {
 
             <span className="nb__mSection">Navigation</span>
 
-            {NAV_LINKS.map(({ to, label }) => (
+            {NAV_LINKS_LEFT.map(({ to, label }) => (
+              <Link key={to} to={to} onClick={closeAll}
+                className={`nb__mLink${activeLink === to ? " active" : ""}`}>
+                {label}
+                <span className="nb__mDot" aria-hidden="true" />
+              </Link>
+            ))}
+
+            <div className="nb__mDivider" />
+
+            {/* Study India accordion */}
+            <span className="nb__mSection">Study India</span>
+
+            <button
+              className="nb__mStudyToggle"
+              onClick={() => setMStudyOpen((prev) => !prev)}
+              aria-expanded={mStudyOpen}
+            >
+              <div className="nb__mStudyToggleLeft">
+                <div className="nb__mStudyToggleText">
+                  <span className="nb__mStudyToggleTitle">Explore by Category</span>
+                  <span className="nb__mStudyToggleSub">{courseCategories.length} categories</span>
+                </div>
+              </div>
+              <ChevronDown size={15}
+                className={`nb__mAIChevron${mStudyOpen ? " open" : ""}`}
+                aria-hidden="true" />
+            </button>
+
+            <div className={`nb__mStudyBody${mStudyOpen ? " open" : ""}`}>
+
+              <Link to="/study-india" onClick={closeAll} className="nb__mAIViewAll">
+                <div className="nb__mAIViewAllText">
+                  View All Study India
+                  <span className="nb__mAIViewAllSub">Browse every category</span>
+                </div>
+                <ArrowRight size={14} style={{ color: "var(--primary)", flexShrink: 0 }} />
+              </Link>
+
+              {courseCategories.map((cat) => {
+                const expanded = mExpandedCat === cat.id;
+                const data = categoryData[cat.id];
+                return (
+                  <div key={cat.id} className="nb__mCatWrap">
+                    <div className="nb__mCatRow">
+                      <Link to={`/study-india/${cat.id}`} onClick={closeAll} className="nb__mCatLink">
+                        <div className="nb__mCatText">
+                          <span className="nb__mCatName">{cat.category}</span>
+                          <span className="nb__mCatCount">{cat.courseCount} courses</span>
+                        </div>
+                      </Link>
+                      <button
+                        className="nb__mCatChevronBtn"
+                        onClick={() => setMExpandedCat(expanded ? null : cat.id)}
+                        aria-expanded={expanded}
+                        aria-label={`Toggle ${cat.category} courses`}
+                      >
+                        <ChevronDown size={14} className={`nb__mAIChevron${expanded ? " open" : ""}`} />
+                      </button>
+                    </div>
+
+                    {expanded && data && (
+                      <div className="nb__mCourseList">
+                        {data.courses.map((course) => (
+                          <Link
+                            key={course.name}
+                            to={`/study-india/${cat.id}`}
+                            onClick={closeAll}
+                            className="nb__mCourseItem"
+                          >
+                            <span className="nb__mCourseName">{course.name}</span>
+                            <span className="nb__mCourseMeta">{course.duration} • {course.level}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="nb__mDivider" />
+
+            {NAV_LINKS_RIGHT.map(({ to, label }) => (
               <Link key={to} to={to} onClick={closeAll}
                 className={`nb__mLink${activeLink === to ? " active" : ""}`}>
                 {label}
