@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { getCategoryMeta } from "../../data/indiancourses";
-import { getCategoryData } from "../../data/categoryData";
+import { getCategoryMeta } from "../../Data/indiancourses";
+import { getCategoryData } from "../../Data/categorydata";
 
 import CategoryHero from "../../components/study-india/category-page/CategoryHero";
 import AboutCategory from "../../components/study-india/category-page/AboutCategory";

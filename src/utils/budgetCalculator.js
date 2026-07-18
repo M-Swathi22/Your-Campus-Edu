@@ -3,7 +3,7 @@
  * Prompt builder, local pre-calculators, and formatting helpers.
  */
 
-import { DESTINATIONS, CURRENCY, LOAN_OPTIONS, COURSE_TYPES } from "../data/budgetData";
+import { DESTINATIONS, CURRENCY, LOAN_OPTIONS, COURSE_TYPES } from "../Data/budgetData";
 
 /* ─── Format currency ─── */
 export function formatCurrency(amount, destKey = "India") {

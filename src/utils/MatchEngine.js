@@ -1,4 +1,4 @@
-import { courseCategories } from "../data/courses";
+import { courseCategories } from "../Data/courses";
 
 export function rankAllCategories(formData) {
   const { stream, careerGoal, favoriteSubject } = formData;

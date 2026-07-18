@@ -4,7 +4,7 @@
  * These run BEFORE the AI call to catch obvious mismatches early.
  */
 
-import { DOMESTIC_RULES, ABROAD_RULES, VERDICT_TIERS } from "../data/eligibilityRules";
+import { DOMESTIC_RULES, ABROAD_RULES, VERDICT_TIERS } from "../Data/eligibilityRules";
 
 /* ─── Quick local pre-check (catches hard blocks before API call) ─── */
 export function quickPreCheck(formData) {

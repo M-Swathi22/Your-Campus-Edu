@@ -2,8 +2,7 @@
  * compareCalculator.js
  * Prompt builder + helper utilities for the College Comparison tool.
  */
-
-import { COLLEGES, COMPARISON_PARAMS } from "../data/collegesData";
+import { COLLEGE_TYPES, COMPARISON_PARAMS, COLLEGES } from "../Data/collegesData";
 
 /* ─── Format a single college for the AI prompt ─── */
 function formatCollegeForPrompt(college) {

@@ -19,6 +19,7 @@ import StudyIndia from "./pages/StudyIndia";
 import CategoryPage from "./pages/study-india/CategoryPage";
 import CourseDetails from "./pages/study-india/CourseDetails";
 import CitySelection from "./pages/study-india/CitySelection";
+import CollegeList from "./pages/study-india/CollegeList";
 
 
 function App() {
@@ -53,6 +54,7 @@ function App() {
         <Route path="/study-india/:categoryId" element={<CategoryPage />} />
         <Route path="/study-india/:categoryId/:courseSlug" element={<CourseDetails />} />
         <Route path="/study-india/:categoryId/:courseSlug/:stateId" element={<CitySelection />}/>
+        <Route path="/study-india/colleges/:stateId/:cityId" element={<CollegeList />}/>
       </Routes>
 
       <Footer />

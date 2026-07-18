@@ -1,7 +1,7 @@
 // src/pages/study-india/CitySelection.jsx
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getStateById } from "../../data/indianStates";
+import { getStateById } from "../../Data/indianStates";
 import CityHero from "../../components/study-india/city-selection/CityHero";
 import CityGrid from "../../components/study-india/city-selection/CityGrid";
 import CityCTA from "../../components/study-india/city-selection/CityCTA";
