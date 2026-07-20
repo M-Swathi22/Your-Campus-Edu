@@ -1,328 +1,440 @@
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import aboutHeroImg from "../../assets/images/about-hero.png";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { ArrowRight, Award, Users, GraduationCap, Globe2, Clock } from "lucide-react";
+import aboutHeroImg from "../../assets/images/ai-tool.png";
 
-const stats = [
-  { number: "5000+", label: "Students Guided" },
-  { number: "250+", label: "Universities" },
-  { number: "15+", label: "Countries" },
-  { number: "10+", label: "Years Experience" },
+const journey = [
+  { year: "2015", milestone: "Founded in Coimbatore" },
+  { year: "2018", milestone: "50+ University Partners" },
+  { year: "2021", milestone: "Launched Study India Desk" },
+  { year: "2024", milestone: "5,000+ Students Guided" },
 ];
 
-const AboutHero = () => {
+const stats = [
+  { label: "Students Guided", value: "5,000+", icon: Users },
+  { label: "Universities", value: "250+", icon: GraduationCap },
+  { label: "Countries", value: "15+", icon: Globe2 },
+  { label: "Years Experience", value: "10+", icon: Clock },
+];
+
+export default function AboutHero() {
+  const [index, setIndex] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+  const btnRef = useRef(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % journey.length);
+    }, 3400);
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion]);
+
+  const current = journey[index];
+
+  const handleMagnetMove = (e) => {
+    if (prefersReducedMotion || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    btnRef.current.style.transform = `translate(${x * 0.18}px, ${y * 0.3}px)`;
+  };
+  const handleMagnetLeave = () => {
+    if (!btnRef.current) return;
+    btnRef.current.style.transform = "translate(0, 0)";
+  };
+
   return (
-    <>
-      <style>{`
-        .about-hero-wrap {
+    <section className="abt-hero">
+      <img
+        src={aboutHeroImg}
+        alt=""
+        loading="eager"
+        fetchpriority="high"
+        className="abt-hero__bg"
+      />
+      <div className="abt-hero__overlay" />
+
+      <div className="abt-hero__inner">
+        <motion.nav
+          aria-label="Breadcrumb"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="abt-hero__crumbs"
+        >
+          <a href="/" className="abt-hero__crumb-link">Home</a>
+          <span className="abt-hero__crumb-sep">/</span>
+          <span className="abt-hero__crumb-current">About Us</span>
+        </motion.nav>
+
+        <motion.span
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
+          className="abt-hero__badge"
+        >
+          <Award size={14} className="abt-hero__badge-icon" />
+          About Your Campus Edu
+        </motion.span>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="abt-hero__title"
+        >
+          A Decade of <span className="abt-hero__title-accent">Shaping Global Leaders</span>
+        </motion.h1>
+
+        <div className="abt-hero__rule" />
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="abt-hero__subtext"
+        >
+          We help ambitious students discover the right universities, courses,
+          scholarships, and global opportunities through expert guidance and
+          personalized support at every step of their journey — at home or abroad.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65, duration: 0.5 }}
+          className="abt-hero__cta-row"
+        >
+          <button
+            ref={btnRef}
+            onMouseMove={handleMagnetMove}
+            onMouseLeave={handleMagnetLeave}
+            className="abt-hero__btn abt-hero__btn--primary"
+          >
+            Meet Our Team
+            <ArrowRight size={16} className="abt-hero__btn-arrow" />
+          </button>
+          <button className="abt-hero__btn abt-hero__btn--ghost">
+            Our Journey
+          </button>
+        </motion.div>
+
+        {/* slim single-line rotating timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="abt-hero__ticker"
+        >
+          <span className="abt-hero__ticker-dot" />
+          <span className="abt-hero__ticker-label">Our Journey</span>
+          <span className="abt-hero__ticker-divider" />
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={current.year + current.milestone}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="abt-hero__ticker-text"
+            >
+              <b>{current.year}</b> — {current.milestone}
+            </motion.span>
+          </AnimatePresence>
+        </motion.div>
+
+        {/* stat strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.95, duration: 0.6 }}
+          className="abt-hero__stats"
+        >
+          {stats.map(({ label, value, icon: Icon }) => (
+            <div key={label} className="abt-hero__stat">
+              <Icon size={17} className="abt-hero__stat-icon" />
+              <div className="abt-hero__stat-text">
+                <span className="abt-hero__stat-value">{value}</span>
+                <span className="abt-hero__stat-label">{label}</span>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      <style jsx>{`
+        .abt-hero {
           position: relative;
-          height: 100dvh;
-          max-height: 700px;
-          min-height: 560px;
           display: flex;
           flex-direction: column;
+          justify-content: center;
+          min-height: 100vh;
           overflow: hidden;
+          padding: 7rem 1.5rem;
           font-family: var(--font-main);
         }
 
-        /* ── breadcrumb ── */
-        .about-bc-link {
-          font-family: var(--font-main);
-          font-size: 13px;
+        .abt-hero__bg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: brightness(0.88) saturate(0.95);
+        }
+
+        .abt-hero__overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--primary-dark) 32%, transparent) 0%,
+            color-mix(in srgb, var(--primary-dark) 12%, transparent) 40%,
+            color-mix(in srgb, var(--primary-dark) 20%, transparent) 70%,
+            color-mix(in srgb, var(--primary-dark) 48%, transparent) 100%
+          );
+        }
+
+        .abt-hero__inner {
+          position: relative;
+          z-index: 1;
+          margin: 0 auto;
+          width: 100%;
+          max-width: 46rem;
+          text-align: center;
+        }
+
+        .abt-hero__crumbs {
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+        .abt-hero__crumb-link {
+          color: color-mix(in srgb, var(--text-white) 85%, transparent);
+          font-size: 0.8rem;
           font-weight: 500;
-          color: rgba(255,255,255,0.65);
           text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          transition: color 0.2s ease;
+          text-shadow: 0 1px 8px color-mix(in srgb, var(--primary-dark) 55%, transparent);
         }
-        .about-bc-link:hover { color: #fff; }
-        .about-bc-sep {
-          font-family: var(--font-main);
-          font-size: 13px;
-          color: rgba(255,255,255,0.28);
+        .abt-hero__crumb-sep {
+          color: color-mix(in srgb, var(--text-white) 55%, transparent);
+          font-size: 0.8rem;
         }
-        .about-bc-current {
-          font-family: var(--font-main);
-          font-size: 13px;
-          font-weight: 400;
-          color: rgba(255,255,255,0.42);
+        .abt-hero__crumb-current {
+          color: color-mix(in srgb, var(--text-white) 70%, transparent);
+          font-size: 0.8rem;
+          text-shadow: 0 1px 8px color-mix(in srgb, var(--primary-dark) 55%, transparent);
         }
 
-        /* ── badge ── */
-        .about-badge {
+        .abt-hero__badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 6px 18px;
-          border-radius: var(--radius-xl);
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.18);
-          margin-bottom: 22px;
-          font-family: var(--font-main);
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.85);
+          gap: 0.5rem;
+          margin-bottom: 1.75rem;
+          padding: 0.5rem 1rem;
+          border-radius: var(--radius-sm);
+          background: color-mix(in srgb, var(--text-white) 55%, transparent);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-left: 3px solid var(--secondary);
+          color: var(--primary-dark);
+          font-size: 0.8rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          box-shadow: var(--shadow-sm);
         }
-        .about-badge-dot {
+        .abt-hero__badge-icon {
+          color: var(--secondary);
+        }
+
+        .abt-hero__title {
+          font-size: clamp(2.4rem, 5vw, 4rem);
+          font-weight: 700;
+          line-height: 1.15;
+          letter-spacing: -0.02em;
+          margin: 0;
+          color: var(--text-white);
+          text-shadow: 0 4px 24px color-mix(in srgb, var(--primary-dark) 65%, transparent);
+        }
+        .abt-hero__title-accent {
+          background-image: var(--gradient-primary);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          text-shadow: none;
+          filter: drop-shadow(0 4px 20px color-mix(in srgb, var(--primary-dark) 45%, transparent));
+        }
+
+        .abt-hero__rule {
+          width: 64px;
+          height: 3px;
+          margin: 1.75rem auto 0;
+          background: var(--gradient-primary);
+        }
+
+        .abt-hero__subtext {
+          margin: 1.5rem auto 0;
+          max-width: 34rem;
+          color: color-mix(in srgb, var(--text-white) 92%, transparent);
+          font-size: 1rem;
+          line-height: 1.8;
+          text-shadow: 0 2px 16px color-mix(in srgb, var(--primary-dark) 55%, transparent);
+        }
+
+        .abt-hero__cta-row {
+          margin-top: 2.25rem;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+        }
+
+        .abt-hero__btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.9rem 1.75rem;
+          border-radius: var(--radius-sm);
+          font-size: 0.95rem;
+          font-weight: 600;
+          font-family: var(--font-main);
+          border: none;
+          cursor: pointer;
+          transition: var(--transition);
+        }
+        .abt-hero__btn--primary {
+          background: var(--gradient-primary);
+          color: var(--text-white);
+          box-shadow: var(--shadow-md);
+          transition: transform 0.15s ease-out;
+        }
+        .abt-hero__btn-arrow {
+          transition: transform 0.25s ease;
+        }
+        .abt-hero__btn--primary:hover .abt-hero__btn-arrow {
+          transform: translateX(3px);
+        }
+        .abt-hero__btn--ghost {
+          background: color-mix(in srgb, var(--text-white) 55%, transparent);
+          border: 1px solid color-mix(in srgb, var(--text-white) 45%, transparent);
+          color: var(--primary-dark);
+        }
+        .abt-hero__btn--ghost:hover {
+          background: color-mix(in srgb, var(--text-white) 75%, transparent);
+        }
+
+        .abt-hero__ticker {
+          margin: 2.5rem auto 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.65rem;
+          padding: 0.6rem 1.25rem;
+          border-radius: var(--radius-sm);
+          background: color-mix(in srgb, var(--primary-dark) 85%, black);
+          border: 1px solid color-mix(in srgb, var(--accent-green) 22%, transparent);
+          max-width: 100%;
+          box-shadow: var(--shadow-md);
+        }
+        .abt-hero__ticker-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #31b978;
+          background: var(--accent-green);
+          flex-shrink: 0;
+          animation: abt-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes abt-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.25; }
+        }
+        .abt-hero__ticker-label {
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: color-mix(in srgb, var(--text-white) 55%, transparent);
           flex-shrink: 0;
         }
-
-        /* ── heading ── */
-        .about-h1 {
-          font-family: var(--font-main);
-          font-size: clamp(2.1rem, 5.5vw, 3.6rem);
-          font-weight: 800;
-          line-height: 1.14;
-          letter-spacing: -0.03em;
-          color: #ffffff;
-          margin: 0 0 20px;
-          max-width: 740px;
+        .abt-hero__ticker-divider {
+          width: 1px;
+          height: 14px;
+          background: color-mix(in srgb, var(--text-white) 18%, transparent);
+          flex-shrink: 0;
         }
-        .about-h1-green {
-          font-family: var(--font-main);
-          font-weight: 800;
-          color: #31b978;
+        .abt-hero__ticker-text {
+          font-size: 0.85rem;
+          color: var(--text-white);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
-
-        /* ── description ── */
-        .about-desc {
-          font-family: var(--font-main);
-          font-size: 15px;
-          line-height: 1.85;
-          color: rgba(255,255,255,0.72);
-          margin: 0 auto;
-          max-width: 560px;
-          font-weight: 400;
+        .abt-hero__ticker-text b {
+          color: var(--accent-green);
         }
 
-        /* ── stats ── */
-        .about-stats-row {
+        .abt-hero__stats {
+          margin: 2.5rem auto 0;
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.25rem 1rem;
+          max-width: 40rem;
+          padding: 1.25rem 1rem;
+          border-radius: var(--radius-md);
+          background: color-mix(in srgb, var(--text-white) 65%, transparent);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid color-mix(in srgb, var(--text-white) 45%, transparent);
+          box-shadow: var(--shadow-md);
+        }
+        @media (min-width: 640px) {
+          .abt-hero__stats {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
+        .abt-hero__stat {
           display: flex;
-          flex-wrap: wrap;
+          align-items: center;
           justify-content: center;
-          max-width: 700px;
-          width: 100%;
-          border-top: 1px solid rgba(255,255,255,0.12);
-          padding-top: 28px;
+          gap: 0.6rem;
+          padding: 0.5rem;
+          border-radius: var(--radius-sm);
+          border-top: 2px solid transparent;
+          transition: var(--transition);
         }
-        .about-stat-item {
-          flex: 1 1 150px;
-          text-align: center;
-          padding: 0 28px;
-          border-right: 1px solid rgba(255,255,255,0.12);
+        .abt-hero__stat:hover {
+          border-top-color: var(--accent-green);
+          background: color-mix(in srgb, var(--primary) 6%, transparent);
         }
-        .about-stat-item:last-child {
-          border-right: none;
+        .abt-hero__stat-icon {
+          color: var(--secondary);
+          flex-shrink: 0;
         }
-        .about-stat-num {
-          font-family: var(--font-main);
-          font-size: clamp(22px, 3vw, 32px);
-          font-weight: 800;
-          color: #ffffff;
-          margin: 0;
-          line-height: 1;
-          letter-spacing: -0.03em;
+        .abt-hero__stat-text {
+          text-align: left;
         }
-        .about-stat-lbl {
-          font-family: var(--font-main);
-          font-size: 10px;
+        .abt-hero__stat-value {
+          display: block;
+          color: var(--primary-dark);
+          font-size: 1.2rem;
           font-weight: 700;
-          color: rgba(255,255,255,0.45);
-          margin: 7px 0 0;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
+        }
+        .abt-hero__stat-label {
+          display: block;
+          color: var(--text-medium);
+          font-size: 0.7rem;
+          font-weight: 500;
         }
 
-        /* ── mobile ── */
-        @media (max-width: 640px) {
-          .about-hero-wrap {
-            max-height: none;
-            min-height: 100dvh;
-          }
-          .about-h1 {
-            font-size: clamp(1.8rem, 8vw, 2.4rem);
-            letter-spacing: -0.02em;
-          }
-          .about-desc {
-            font-size: 14px;
-          }
-          .about-stat-item {
-            flex: 1 1 42%;
-            border-right: none !important;
-            padding: 0 10px 18px;
-          }
-          .about-stat-item:nth-child(odd) {
-            border-right: 1px solid rgba(255,255,255,0.1) !important;
-          }
-          .about-stat-item:nth-last-child(-n+2) {
-            padding-bottom: 0;
-          }
-          .about-stats-row {
-            padding-top: 22px;
-          }
-          .about-badge {
-            font-size: 9px;
-            padding: 5px 14px;
+        @media (prefers-reduced-motion: reduce) {
+          .abt-hero__ticker-dot {
+            animation: none;
           }
         }
       `}</style>
-
-      <section className="about-hero-wrap" aria-label="About Your Campus Edu">
-
-        {/* Background Image */}
-        <img
-          src={aboutHeroImg}
-          alt=""
-          aria-hidden="true"
-          fetchpriority="high"
-          loading="eager"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center 25%",
-            zIndex: 0,
-          }}
-        />
-
-        {/* Single clean overlay — NOT too dark */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(8, 4, 20, 0.50)",
-            zIndex: 1,
-          }}
-        />
-
-        {/* Bottom gradient to anchor stats */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "220px",
-            background:
-              "linear-gradient(to top, rgba(8,4,20,0.92) 0%, rgba(8,4,20,0.4) 60%, transparent 100%)",
-            zIndex: 2,
-          }}
-        />
-
-        {/* ── Main content — pushed UP via justifyContent flex ── */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 3,
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            padding: "0 24px 40px",
-            textAlign: "center",
-          }}
-        >
-          {/* Breadcrumb */}
-          <motion.nav
-            aria-label="Breadcrumb"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "7px",
-              marginBottom: "28px",
-            }}
-          >
-            <Link to="/" className="about-bc-link">
-              <svg
-                width="13" height="13" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-              Home
-            </Link>
-            <span className="about-bc-sep" aria-hidden="true">›</span>
-            <span className="about-bc-current">About Us</span>
-          </motion.nav>
-
-          {/* Badge */}
-          <motion.div
-            className="about-badge"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <span className="about-badge-dot" aria-hidden="true" />
-            About Your Campus Edu
-          </motion.div>
-
-          {/* H1 */}
-          <motion.h1
-            className="about-h1"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          >
-            Shaping Future{" "}
-            <span className="about-h1-green">Global Leaders</span>
-            <br />
-            Through Education
-          </motion.h1>
-
-          {/* Description */}
-          <motion.p
-            className="about-desc"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          >
-            We help ambitious students discover the right universities, courses,
-            scholarships, and global opportunities through expert guidance and
-            personalized support at every step of their study abroad journey.
-          </motion.p>
-
-          {/* Spacer between text and stats */}
-          <div style={{ height: "40px" }} />
-
-          {/* Stats Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.36, ease: [0.16, 1, 0.3, 1] }}
-            style={{ width: "100%", display: "flex", justifyContent: "center" }}
-          >
-            <div className="about-stats-row">
-              {stats.map((item, i) => (
-                <div key={i} className="about-stat-item">
-                  <p className="about-stat-num">{item.number}</p>
-                  <p className="about-stat-lbl">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-      </section>
-    </>
+    </section>
   );
-};
-
-export default AboutHero;
+}

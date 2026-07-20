@@ -20,7 +20,7 @@ import CategoryPage from "./pages/study-india/CategoryPage";
 import CourseDetails from "./pages/study-india/CourseDetails";
 import CitySelection from "./pages/study-india/CitySelection";
 import CollegeList from "./pages/study-india/CollegeList";
-
+import CountryDetails from "./pages/CountryDetails";
 
 function App() {
   const location = useLocation();
@@ -49,12 +49,15 @@ function App() {
         <Route path="/compare-colleges" element={<CompareColleges />} />
         <Route path="/country-fit-quiz" element={<CountryFitQuiz />} />
         <Route path="/study-destination" element={<StudyDestination/>} />
+        <Route path="/study-destination" element={<StudyDestination />} />
+        <Route path="/study-destination/:countryId" element={<CountryDetails />}/>
         <Route path="/contact" element={<Contact/>} />   
         <Route path="/study-india" element={<StudyIndia />} />
         <Route path="/study-india/:categoryId" element={<CategoryPage />} />
         <Route path="/study-india/:categoryId/:courseSlug" element={<CourseDetails />} />
         <Route path="/study-india/:categoryId/:courseSlug/:stateId" element={<CitySelection />}/>
         <Route path="/study-india/colleges/:stateId/:cityId" element={<CollegeList />}/>
+
       </Routes>
 
       <Footer />

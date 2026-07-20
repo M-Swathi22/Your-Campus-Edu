@@ -12,7 +12,7 @@ import {
   ArrowRight,
   MapPin,
 } from "lucide-react";
-import { destinations, origin } from "../../data/studyDestination";
+import { destinations, origin } from "../../Data/studyDestination";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 const WIDTH = 980;
