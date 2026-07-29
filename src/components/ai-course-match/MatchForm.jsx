@@ -6,7 +6,7 @@ import {
   GraduationCap,
   Briefcase,
   BookOpen,
-  Layers,
+  Layers,   
   Wallet,
   MapPin,
 } from "lucide-react";

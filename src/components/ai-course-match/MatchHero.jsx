@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Sparkles, ArrowRight, Brain, Shield, Zap, Target } from "lucide-react";
 
 // Swap this for your actual background image (a bright, airy campus / student photo reads best here)
-import heroBg from "../../assets/images/ai-course.png";
+import heroBg from "../../assets/images/ai-coursematch.png";
 
 const TRUST_PILLS = [
   { icon: Brain, text: "Powered by Claude AI", color: "var(--accent-blue)" },
@@ -39,6 +39,7 @@ export default function MatchHero() {
       <div className="match-hero__media">
         <div className="match-hero__bg" style={{ backgroundImage: `url(${heroBg})` }} />
         <div className="match-hero__wash" />
+        <div className="match-hero__spot" />
       </div>
 
       <div className="match-hero__inner">
@@ -147,21 +148,38 @@ export default function MatchHero() {
           inset: 0;
           background-size: cover;
           background-position: center;
-          filter: grayscale(4%) brightness(1.02);
+          filter: grayscale(6%) brightness(0.98);
           transform: scale(1.02);
         }
 
+        /* Stronger, layered wash: darkens/lightens progressively toward the
+           text column regardless of what's busy in the photo underneath */
         .match-hero__wash {
           position: absolute;
           inset: 0;
           background:
-            linear-gradient(
-              135deg,
-              color-mix(in srgb, var(--primary-light) 68%, transparent) 0%,
-              color-mix(in srgb, var(--bg-section) 58%, transparent) 50%,
-              color-mix(in srgb, var(--white) 48%, transparent) 100%
+            radial-gradient(ellipse 900px 560px at 50% 40%,
+              color-mix(in srgb, var(--white) 88%, transparent) 0%,
+              color-mix(in srgb, var(--white) 72%, transparent) 38%,
+              color-mix(in srgb, var(--bg-section) 55%, transparent) 62%,
+              color-mix(in srgb, var(--bg-section) 30%, transparent) 100%
             ),
-            radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--accent-blue) 14%, transparent) 0%, transparent 50%);
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--bg-section) 35%, transparent) 0%,
+              transparent 22%,
+              transparent 70%,
+              color-mix(in srgb, var(--bg-section) 45%, transparent) 100%
+            );
+        }
+
+        /* Subtle top-right color accent so the wash doesn't read as flat white */
+        .match-hero__spot {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at 88% 6%,
+            color-mix(in srgb, var(--accent-blue) 18%, transparent) 0%,
+            transparent 45%
+          );
         }
 
         .match-hero__inner {
@@ -179,8 +197,8 @@ export default function MatchHero() {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: color-mix(in srgb, var(--white) 62%, transparent);
-          border: 1px solid var(--border);
+          background: color-mix(in srgb, var(--white) 88%, transparent);
+          border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
           border-radius: 100px;
@@ -191,6 +209,7 @@ export default function MatchHero() {
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
+          box-shadow: var(--shadow-sm);
           animation: heroFadeUp 0.7s ease both;
         }
 
@@ -203,6 +222,7 @@ export default function MatchHero() {
           letter-spacing: -0.01em;
           color: var(--primary-dark);
           margin-bottom: 20px;
+          text-shadow: 0 2px 24px color-mix(in srgb, var(--white) 70%, transparent);
           animation: heroFadeUp 0.7s ease 0.05s both;
         }
 
@@ -216,7 +236,7 @@ export default function MatchHero() {
         .match-hero__sub {
           font-size: 16px;
           line-height: 1.75;
-          color: var(--text-medium);
+          color: var(--text-dark);
           max-width: 520px;
           margin: 0 auto 32px;
           animation: heroFadeUp 0.7s ease 0.1s both;
@@ -260,8 +280,8 @@ export default function MatchHero() {
         .cta-primary:hover .cta-primary__arrow { transform: translateX(3px); }
 
         .cta-secondary {
-          background: color-mix(in srgb, var(--white) 70%, transparent);
-          border: 1px solid var(--border);
+          background: color-mix(in srgb, var(--white) 88%, transparent);
+          border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
           color: var(--primary-dark);
           backdrop-filter: blur(8px);
         }
@@ -285,14 +305,15 @@ export default function MatchHero() {
           display: inline-flex;
           align-items: center;
           gap: 7px;
-          background: color-mix(in srgb, var(--white) 55%, transparent);
+          background: color-mix(in srgb, var(--white) 78%, transparent);
           border: 1px solid var(--border);
           backdrop-filter: blur(6px);
           border-radius: 100px;
           padding: 6px 14px;
           font-size: 12px;
-          font-weight: 500;
-          color: var(--text-medium);
+          font-weight: 600;
+          color: var(--text-dark);
+          box-shadow: var(--shadow-sm);
         }
 
         .pill svg { flex-shrink: 0; }
@@ -311,13 +332,14 @@ export default function MatchHero() {
         /* ===== Signature: unified frosted console ===== */
 
         .match-console {
+          position: relative;
           width: 100%;
           max-width: 640px;
           display: flex;
           align-items: center;
           gap: 28px;
-          background: color-mix(in srgb, var(--white) 82%, transparent);
-          border: 1px solid color-mix(in srgb, var(--white) 90%, transparent);
+          background: color-mix(in srgb, var(--white) 94%, transparent);
+          border: 1px solid color-mix(in srgb, var(--white) 96%, transparent);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
           border-radius: var(--radius-xl);
@@ -326,6 +348,17 @@ export default function MatchHero() {
             0 8px 24px color-mix(in srgb, var(--primary-dark) 8%, transparent);
           padding: 26px 32px;
           animation: heroFadeUp 0.7s ease 0.3s both;
+        }
+
+        .match-console::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 24px;
+          right: 24px;
+          height: 3px;
+          border-radius: 0 0 4px 4px;
+          background: var(--gradient-primary);
         }
 
         .match-console__match {

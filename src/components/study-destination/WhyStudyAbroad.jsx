@@ -9,8 +9,8 @@ import {
   Sparkles,
   MapPin,
 } from "lucide-react";
-import hubImg from "../../assets/images/ai-tool.png";
-import sideImg from "../../assets/images/ai-tool.png";
+import hubImg from "../../assets/images/studyabroad_benefits.png";
+import sideImg from "../../assets/images/study_abroad.png";
 
 const NODES = [
   {
