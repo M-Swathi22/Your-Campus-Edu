@@ -30,6 +30,7 @@ const NAV_LINKS_LEFT = [
 
 const NAV_LINKS_RIGHT = [
   { to: "/study-destination", label: "StudyDestination" },
+  { to: "/accommodation",     label: "Accommodation"    },
 ];
 
 const ALL_SIMPLE_LINKS = [...NAV_LINKS_LEFT, ...NAV_LINKS_RIGHT];
@@ -1755,6 +1756,12 @@ export default function Navbar() {
                   className={`nbm__link${activeLink === "/study-destination" ? " active" : ""}`}>
                   StudyDestination
                   {activeLink === "/study-destination" && <span className="nbm__linkDot" aria-hidden="true" />}
+                </Link>
+
+                <Link to="/accommodation" onClick={closeMobile}
+                  className={`nbm__link${activeLink === "/accommodation" ? " active" : ""}`}>
+                  Accommodation
+                  {activeLink === "/accommodation" && <span className="nbm__linkDot" aria-hidden="true" />}
                 </Link>
 
                 <div className={`nbm__expandRow${isAiActive ? " active" : ""}`}>

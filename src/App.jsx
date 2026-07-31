@@ -21,6 +21,7 @@ import CourseDetails from "./pages/study-india/CourseDetails";
 import CitySelection from "./pages/study-india/CitySelection";
 import CollegeList from "./pages/study-india/CollegeList";
 import CountryDetails from "./pages/CountryDetails";
+import Accommodation from "./pages/Accommodation";
 
 function App() {
   const location = useLocation();
@@ -56,6 +57,7 @@ function App() {
         <Route path="/study-india/:categoryId/:courseSlug" element={<CourseDetails />} />
         <Route path="/study-india/:categoryId/:courseSlug/:stateId" element={<CitySelection />}/>
         <Route path="/study-india/colleges/:stateId/:cityId" element={<CollegeList />}/>
+        <Route path="/accommodation" element={<Accommodation />} />
 
       </Routes>
 

@@ -426,7 +426,7 @@ export default function AboutHero() {
 
         @media (prefers-reduced-motion: reduce) {
           .abt-hero__ticker-dot {
-            animation: none;
+            animation: none; 
           }
         }
       `}</style>
