@@ -22,6 +22,7 @@ import CitySelection from "./pages/study-india/CitySelection";
 import CollegeList from "./pages/study-india/CollegeList";
 import CountryDetails from "./pages/CountryDetails";
 import Accommodation from "./pages/Accommodation";
+import AccommodationCitySelection from "./pages/accommodation/CitySelection";
 
 function App() {
   const location = useLocation();
@@ -58,6 +59,9 @@ function App() {
         <Route path="/study-india/:categoryId/:courseSlug/:stateId" element={<CitySelection />}/>
         <Route path="/study-india/colleges/:stateId/:cityId" element={<CollegeList />}/>
         <Route path="/accommodation" element={<Accommodation />} />
+        <Route path="/accommodation/:countryId" element={<AccommodationCitySelection />} />
+        {/* TODO: add /accommodation/:countryId/:cityId once the listings page exists —
+            CityGrid rows already link there */}
 
       </Routes>
 

@@ -67,7 +67,7 @@ export default function PopularDestinations() {
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.55, delay: (i % 4) * 0.09, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link to={`/study-abroad/${d.id}`} className="dest-card__link">
+              <Link to={`/accommodation/${d.id}`} className="dest-card__link">
                 <div className="dest-card__frame">
                   <div
                     className="dest-card__img"

@@ -1,5 +1,5 @@
 // src/components/study-destination/WorldMap.jsx
-// Requires: npm install d3-geo topojson-client
+// Requires: npm install d3-geo topojson-client framer-motion lucide-react
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { geoEqualEarth, geoPath } from "d3-geo";
@@ -12,37 +12,162 @@ import {
   ShieldCheck,
   ArrowRight,
   MapPin,
+  Search,
+  X,
 } from "lucide-react";
 import { destinations, origin } from "../../data/countryDetails";
 
-const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-const WIDTH = 980;
-const HEIGHT = 580;
-const FLIGHT_DURATION = 1600; // ms
+// 50m resolution — needed at this zoom level so small countries
+// (Malta, Cyprus, Baltics, Balkans) don't render blocky/jagged.
+const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
+
+// Canvas is FIXED (not auto-expanding) so that India's shape gets
+// naturally cropped to a corner sliver by the viewBox instead of
+// being pulled fully into view. Nudge these two constants together
+// with EUROPE_FIT_WIDTH_FRACTION below if India shows too much / too
+// little in your browser — see the notes near their declarations.
+// Bigger canvas = more pixels dedicated to Europe = each country
+// renders larger with clearer, more visibly-spaced borders.
+const CANVAS_WIDTH = 1320;
+const CANVAS_HEIGHT = 860;
+
+// Portion of CANVAS_WIDTH used to calibrate the projection's scale.
+// The projection is fit to EUROPE ONLY inside this sub-rect — India's
+// position is then wherever it naturally falls afterward, not the
+// other way round. Lower this to zoom Europe in further (pushes more
+// of India off-canvas); raise it to zoom Europe out (reveals more of
+// India in the corner).
+const EUROPE_FIT_WIDTH_FRACTION = 0.78;
+const MAP_PADDING = 40;
+
+const FLIGHT_DURATION = 1700; // ms, plane flight-in
+const ROUTE_DRAW_DURATION = 1.1; // s, framer-motion route draw-in
+const ZOOM_SCALE = 1.42; // how far the map pans/zooms toward a selected country
+
+// Region grouping — the pill list below reads like a real departure
+// board: grouped by geography so ~49 destinations stay scannable.
+const REGION_ORDER = [
+  "British Isles",
+  "Western Europe",
+  "Nordic",
+  "Baltic States",
+  "Southern Europe",
+  "Central & Eastern Europe",
+  "Balkans",
+  "Caucasus & Turkey",
+  "Micro-states",
+];
+
+const REGION_MAP = {
+  unitedkingdom: "British Isles",
+  ireland: "British Isles",
+
+  france: "Western Europe",
+  germany: "Western Europe",
+  netherlands: "Western Europe",
+  belgium: "Western Europe",
+  luxembourg: "Western Europe",
+  austria: "Western Europe",
+  switzerland: "Western Europe",
+
+  denmark: "Nordic",
+  sweden: "Nordic",
+  norway: "Nordic",
+  finland: "Nordic",
+  iceland: "Nordic",
+
+  estonia: "Baltic States",
+  latvia: "Baltic States",
+  lithuania: "Baltic States",
+
+  spain: "Southern Europe",
+  portugal: "Southern Europe",
+  italy: "Southern Europe",
+  greece: "Southern Europe",
+  malta: "Southern Europe",
+  cyprus: "Southern Europe",
+
+  poland: "Central & Eastern Europe",
+  czechia: "Central & Eastern Europe",
+  slovakia: "Central & Eastern Europe",
+  hungary: "Central & Eastern Europe",
+  romania: "Central & Eastern Europe",
+  bulgaria: "Central & Eastern Europe",
+  ukraine: "Central & Eastern Europe",
+  belarus: "Central & Eastern Europe",
+  moldova: "Central & Eastern Europe",
+  russia: "Central & Eastern Europe",
+
+  croatia: "Balkans",
+  slovenia: "Balkans",
+  serbia: "Balkans",
+  bosniaandherzegovina: "Balkans",
+  montenegro: "Balkans",
+  northmacedonia: "Balkans",
+  albania: "Balkans",
+
+  georgia: "Caucasus & Turkey",
+  armenia: "Caucasus & Turkey",
+  azerbaijan: "Caucasus & Turkey",
+  turkey: "Caucasus & Turkey",
+
+  andorra: "Micro-states",
+  liechtenstein: "Micro-states",
+  monaco: "Micro-states",
+  sanmarino: "Micro-states",
+  vaticancity: "Micro-states",
+};
 
 const easeInOutCubic = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-const lerp = (a, b, t) => a + (b - a) * t;
+// ---- Quadratic bezier helpers for the flight route ----
+// Everything here operates in projected pixel space, not lon/lat —
+// that's what makes the curve look like a clean, consistent "flight
+// path" arc no matter which country is selected.
 
-const bearing = (from, to) => {
-  const dLon = to.lon - from.lon;
-  const dLat = to.lat - from.lat;
-  return (Math.atan2(dLat, dLon) * 180) / Math.PI;
+const arcControlPoint = (p0, p2, bow = 0.26) => {
+  const mx = (p0[0] + p2[0]) / 2;
+  const my = (p0[1] + p2[1]) / 2;
+  const dx = p2[0] - p0[0];
+  const dy = p2[1] - p0[1];
+  const dist = Math.hypot(dx, dy) || 1;
+  let nx = -dy / dist;
+  let ny = dx / dist;
+  // Always bow upward (toward smaller y) for a consistent, pleasant arc.
+  if (ny > 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  const offset = dist * bow;
+  return [mx + nx * offset, my + ny * offset];
 };
 
-const projection = geoEqualEarth().scale(195).translate([WIDTH / 2, HEIGHT / 2 + 40]);
-const pathGenerator = geoPath(projection);
+const arcPoint = (p0, p1, p2, t) => {
+  const mt = 1 - t;
+  return [
+    mt * mt * p0[0] + 2 * mt * t * p1[0] + t * t * p2[0],
+    mt * mt * p0[1] + 2 * mt * t * p1[1] + t * t * p2[1],
+  ];
+};
+
+const arcTangentAngle = (p0, p1, p2, t) => {
+  const mt = 1 - t;
+  const dx = 2 * mt * (p1[0] - p0[0]) + 2 * t * (p2[0] - p1[0]);
+  const dy = 2 * mt * (p1[1] - p0[1]) + 2 * t * (p2[1] - p1[1]);
+  return (Math.atan2(dy, dx) * 180) / Math.PI;
+};
 
 const WorldMap = () => {
   const [countries, setCountries] = useState([]);
+  const [projection, setProjection] = useState(null);
   const [loadError, setLoadError] = useState(false);
   const [hoveredDest, setHoveredDest] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [flying, setFlying] = useState(false);
-  const [planePos, setPlanePos] = useState(origin.coords);
-  const [planeAngle, setPlaneAngle] = useState(0);
   const [arrived, setArrived] = useState(false);
+  const [planeT, setPlaneT] = useState(0);
+  const [query, setQuery] = useState("");
   const rafRef = useRef(null);
 
   const selected = destinations.find((d) => d.id === selectedId) || null;
@@ -54,7 +179,29 @@ const WorldMap = () => {
       .then((topology) => {
         if (cancelled) return;
         const geo = feature(topology, topology.objects.countries);
+
+        // Calibrate scale + translate against EUROPE ONLY, so Europe
+        // fills most of the frame at a real "zoomed in" level. India's
+        // position is derived afterward using this same scale/translate
+        // and is left to fall wherever it naturally does — the fixed
+        // canvas size then crops it down to a corner sliver.
+        const destNames = new Set(destinations.map((d) => d.geoName));
+        const europeFeatures = geo.features.filter((f) =>
+          destNames.has(f.properties.name)
+        );
+
+        const proj = geoEqualEarth();
+        const europeFitWidth = CANVAS_WIDTH * EUROPE_FIT_WIDTH_FRACTION;
+        proj.fitExtent(
+          [
+            [MAP_PADDING, MAP_PADDING],
+            [europeFitWidth - MAP_PADDING, CANVAS_HEIGHT - MAP_PADDING],
+          ],
+          { type: "FeatureCollection", features: europeFeatures }
+        );
+
         setCountries(geo.features);
+        setProjection(() => proj);
       })
       .catch(() => !cancelled && setLoadError(true));
     return () => {
@@ -62,24 +209,41 @@ const WorldMap = () => {
     };
   }, []);
 
-  const flyTo = useCallback((dest) => {
+  const pathGenerator = useMemo(
+    () => (projection ? geoPath(projection) : null),
+    [projection]
+  );
+
+  const originXY = useMemo(
+    () => (projection ? projection([origin.coords.lon, origin.coords.lat]) : null),
+    [projection]
+  );
+
+  const destXY = useMemo(() => {
+    if (!projection) return {};
+    return Object.fromEntries(
+      destinations.map((d) => [d.id, projection([d.coords.lon, d.coords.lat])])
+    );
+  }, [projection]);
+
+  const route = useMemo(() => {
+    if (!selected || !originXY || !destXY[selected.id]) return null;
+    const p0 = originXY;
+    const p2 = destXY[selected.id];
+    const p1 = arcControlPoint(p0, p2);
+    return { p0, p1, p2, d: `M ${p0[0]} ${p0[1]} Q ${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}` };
+  }, [selected, originXY, destXY]);
+
+  const flyTo = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
     setArrived(false);
     setFlying(true);
-    setPlaneAngle(bearing(origin.coords, dest.coords));
+    setPlaneT(0);
 
     const start = performance.now();
-
     const step = (now) => {
       const raw = Math.min((now - start) / FLIGHT_DURATION, 1);
-      const t = easeInOutCubic(raw);
-      const arc = Math.sin(Math.PI * t) * 8;
-
-      setPlanePos({
-        lon: lerp(origin.coords.lon, dest.coords.lon, t),
-        lat: lerp(origin.coords.lat, dest.coords.lat, t) + arc,
-      });
-
+      setPlaneT(easeInOutCubic(raw));
       if (raw < 1) {
         rafRef.current = requestAnimationFrame(step);
       } else {
@@ -87,36 +251,76 @@ const WorldMap = () => {
         setArrived(true);
       }
     };
-
     rafRef.current = requestAnimationFrame(step);
   }, []);
 
   const handleSelect = (dest) => {
     if (flying) return;
     setSelectedId(dest.id);
-    flyTo(dest);
+    flyTo();
   };
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
-  const originXY = useMemo(() => projection([origin.coords.lon, origin.coords.lat]), []);
-  const destXY = useMemo(
-    () =>
-      Object.fromEntries(
-        destinations.map((d) => [d.id, projection([d.coords.lon, d.coords.lat])])
-      ),
-    []
+  const planePoint = useMemo(
+    () => (route ? arcPoint(route.p0, route.p1, route.p2, planeT) : null),
+    [route, planeT]
   );
-  const planeXY = useMemo(
-    () => projection([planePos.lon, planePos.lat]),
-    [planePos]
+  const planeAngle = useMemo(
+    () => (route ? arcTangentAngle(route.p0, route.p1, route.p2, planeT) : 0),
+    [route, planeT]
   );
+
+  // Smoothly pan + zoom the whole map group toward the selected country.
+  const panZoom = useMemo(() => {
+    if (!selected || !destXY[selected.id]) return { x: 0, y: 0, scale: 1 };
+    const [dx, dy] = destXY[selected.id];
+    const targetX = CANVAS_WIDTH * 0.46;
+    const targetY = CANVAS_HEIGHT * 0.48;
+    return {
+      x: targetX - dx * ZOOM_SCALE,
+      y: targetY - dy * ZOOM_SCALE,
+      scale: ZOOM_SCALE,
+    };
+  }, [selected, destXY]);
 
   const activeLabelText = useMemo(() => {
     if (hoveredDest) return `${hoveredDest.flag} ${hoveredDest.name}`;
     if (selected) return `${selected.flag} ${selected.name}`;
     return null;
   }, [hoveredDest, selected]);
+
+  // Group + filter destinations into the departure directory
+  const groupedDestinations = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = destinations.filter((d) => {
+      if (!q) return true;
+      return (
+        d.name.toLowerCase().includes(q) ||
+        d.code.toLowerCase().includes(q) ||
+        (REGION_MAP[d.id] || "").toLowerCase().includes(q)
+      );
+    });
+
+    const buckets = {};
+    filtered.forEach((d) => {
+      const region = REGION_MAP[d.id] || "Other";
+      if (!buckets[region]) buckets[region] = [];
+      buckets[region].push(d);
+    });
+
+    return REGION_ORDER.map((region) => ({ region, items: buckets[region] || [] })).filter(
+      (g) => g.items.length > 0
+    );
+  }, [query]);
+
+  const resultCount = useMemo(
+    () => groupedDestinations.reduce((sum, g) => sum + g.items.length, 0),
+    [groupedDestinations]
+  );
+
+  const mapReady = projection && pathGenerator && countries.length > 0;
+  const courses = selected ? selected.popularCourses || selected.topFields || [] : [];
 
   return (
     <section className="sd-map" id="world-map">
@@ -134,30 +338,75 @@ const WorldMap = () => {
         </p>
       </div>
 
-      <div className="sd-map__chips">
-        {destinations.map((d) => (
-          <button
-            key={d.id}
-            className={`sd-map__chip ${selectedId === d.id ? "is-active" : ""}`}
-            onClick={() => handleSelect(d)}
-            disabled={flying}
-          >
-            <span className="sd-map__chip-flag">{d.flag}</span>
-            <span>{d.name}</span>
-          </button>
-        ))}
-      </div>
-
       <div className="sd-map__body">
-        {/* ============ LEFT MAP CANVAS ============ */}
+        {/* ============ LEFT: COUNTRY LIST ============ */}
+        <div className="sd-map__directory">
+          <div className="sd-map__directory-search">
+            <Search size={16} className="sd-map__directory-search-icon" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search a country…"
+              aria-label="Search destinations"
+            />
+            {query && (
+              <button
+                type="button"
+                className="sd-map__directory-clear"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <div className="sd-map__directory-list">
+            {groupedDestinations.length === 0 && (
+              <div className="sd-map__directory-empty">
+                No countries match "{query}".
+              </div>
+            )}
+
+            {groupedDestinations.map((group) => (
+              <div key={group.region} className="sd-map__directory-group">
+                <div className="sd-map__directory-region">{group.region}</div>
+                <div className="sd-map__directory-pills">
+                  {group.items.map((d) => {
+                    const isActive = selectedId === d.id;
+                    return (
+                      <motion.button
+                        key={d.id}
+                        className={`sd-map__pill ${isActive ? "is-active" : ""}`}
+                        onClick={() => handleSelect(d)}
+                        disabled={flying}
+                        onMouseEnter={() => setHoveredDest(d)}
+                        onMouseLeave={() => setHoveredDest(null)}
+                        whileHover={{ x: 3 }}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <span className="sd-map__pill-flag">{d.flag}</span>
+                        <span className="sd-map__pill-name">{d.name}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ============ CENTER: MAP CANVAS ============ */}
         <div className="sd-map__canvas">
           <div className="sd-map__hud">
             <span className="sd-map__hud-dot"></span>
             <span className="sd-map__hud-text">
               {activeLabelText ? (
-                <>DEPARTURE MATRIX: <strong style={{ color: "var(--accent-blue)" }}>{activeLabelText.toUpperCase()}</strong></>
+                <>ROUTE: <strong style={{ color: "var(--accent-blue)" }}>{activeLabelText.toUpperCase()}</strong></>
               ) : (
-                "RADAR SYSTEM: READY"
+                "SELECT A DESTINATION"
               )}
             </span>
           </div>
@@ -168,111 +417,162 @@ const WorldMap = () => {
             </div>
           )}
 
-          <svg
-            className="sd-map__svg"
-            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-            role="img"
-            aria-label="World map showing flight routes from India"
-          >
-            <defs>
-              <radialGradient id="sdOceanGlow" cx="50%" cy="50%" r="70%">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="var(--primary-dark)" stopOpacity="0.02" />
-              </radialGradient>
-            </defs>
+          {!loadError && !mapReady && (
+            <div className="sd-map__loading-state">Calibrating map…</div>
+          )}
 
-            <rect x="0" y="0" width={WIDTH} height={HEIGHT} fill="url(#sdOceanGlow)" />
+          {mapReady && (
+            <svg
+              className="sd-map__svg"
+              viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
+              role="img"
+              aria-label="Map of Europe showing a flight route from India"
+            >
+              <defs>
+                <radialGradient id="sdOceanGlow" cx="50%" cy="50%" r="70%">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="var(--primary-dark)" stopOpacity="0.02" />
+                </radialGradient>
+                <radialGradient id="sdMarkerGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="var(--accent-blue)" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="var(--accent-blue)" stopOpacity="0" />
+                </radialGradient>
+              </defs>
 
-            <g>
-              {countries.map((geo) => {
-                const name = geo.properties.name;
-                const isOrigin = name === origin.geoName;
-                const matchDest = destinations.find((d) => d.geoName === name);
-                const isSelected = selected && name === selected.geoName;
+              <rect x="0" y="0" width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="url(#sdOceanGlow)" />
 
-                let fill = "color-mix(in srgb, var(--white) 7%, transparent)";
-                if (isOrigin) fill = "var(--accent-green)";
-                else if (isSelected) fill = "var(--primary)";
-                else if (matchDest) fill = "color-mix(in srgb, var(--white) 24%, transparent)";
+              <motion.g
+                animate={panZoom}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {/* Country fills — Europe destinations get a soft tint,
+                    India a faint origin tint, everything else stays dim
+                    ("faded" Asia / Africa / no Americas is achieved purely
+                    by the tight crop, not per-continent logic). */}
+                {countries.map((geo) => {
+                  const name = geo.properties.name;
+                  const isOrigin = name === origin.geoName;
+                  const matchDest = destinations.find((d) => d.geoName === name);
+                  const isSelected = selected && name === selected.geoName;
 
-                return (
-                  <path
-                    key={geo.id ?? name}
-                    d={pathGenerator(geo)}
-                    fill={fill}
-                    stroke="color-mix(in srgb, var(--white) 12%, transparent)"
-                    strokeWidth={0.6}
-                    className={matchDest ? "sd-map__country is-clickable" : "sd-map__country"}
-                    onMouseEnter={() => matchDest && setHoveredDest(matchDest)}
-                    onMouseLeave={() => setHoveredDest(null)}
-                    onClick={() => {
-                      if (matchDest) handleSelect(matchDest);
-                    }}
-                  />
-                );
-              })}
-            </g>
+                  let fill = "color-mix(in srgb, var(--white) 7%, transparent)";
+                  if (isSelected) fill = "color-mix(in srgb, var(--primary) 60%, transparent)";
+                  else if (isOrigin) fill = "color-mix(in srgb, var(--accent-blue) 24%, transparent)";
+                  else if (matchDest) fill = "color-mix(in srgb, var(--white) 26%, transparent)";
 
-            {selected && originXY && destXY[selected.id] && (
-              <line
-                x1={originXY[0]}
-                y1={originXY[1]}
-                x2={destXY[selected.id][0]}
-                y2={destXY[selected.id][1]}
-                stroke="var(--accent-blue)"
-                strokeWidth={1.8}
-                strokeDasharray="4 5"
-                strokeLinecap="round"
-              />
-            )}
+                  return (
+                    <path
+                      key={geo.id ?? name}
+                      d={pathGenerator(geo)}
+                      fill={fill}
+                      stroke="color-mix(in srgb, var(--white) 22%, transparent)"
+                      strokeWidth={0.9}
+                      className={matchDest ? "sd-map__country is-clickable" : "sd-map__country"}
+                      onMouseEnter={() => matchDest && setHoveredDest(matchDest)}
+                      onMouseLeave={() => setHoveredDest(null)}
+                      onClick={() => {
+                        if (matchDest) handleSelect(matchDest);
+                      }}
+                    />
+                  );
+                })}
 
-            {originXY && (
-              <g>
-                <circle cx={originXY[0]} cy={originXY[1]} r={5} fill="var(--accent-green)" stroke="var(--white)" strokeWidth={1.5} />
-                <circle cx={originXY[0]} cy={originXY[1]} r={12} fill="none" stroke="var(--accent-green)" strokeWidth={1} className="sd-map__pulse" />
-                <text x={originXY[0]} y={originXY[1] + 18} textAnchor="middle" className="sd-map__origin-text">
-                  India
-                </text>
-              </g>
-            )}
+                {/* Flight route: draws in, plane flies along it, then
+                    ambient particles loop along it while a country stays selected. */}
+                <AnimatePresence>
+                  {route && (
+                    <g key={selectedId}>
+                      <path
+                        id={`sdRoutePath-${selectedId}`}
+                        d={route.d}
+                        fill="none"
+                        stroke="transparent"
+                      />
+                      <motion.path
+                        d={route.d}
+                        fill="none"
+                        stroke="var(--accent-blue)"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        style={{ filter: "drop-shadow(0 0 4px var(--accent-blue))" }}
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 0.9 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: ROUTE_DRAW_DURATION, ease: "easeInOut" }}
+                      />
 
-            {destinations.map((d) => {
-              const xy = destXY[d.id];
-              if (!xy) return null;
-              const isActive = selectedId === d.id;
-              const isHovered = hoveredDest && hoveredDest.id === d.id;
+                      {arrived &&
+                        [0, 1, 2].map((i) => (
+                          <circle key={i} r={2.4} fill="var(--white)">
+                            <animateMotion
+                              dur="2.6s"
+                              begin={`${i * 0.7}s`}
+                              repeatCount="indefinite"
+                              rotate="auto"
+                            >
+                              <mpath href={`#sdRoutePath-${selectedId}`} />
+                            </animateMotion>
+                            <animate
+                              attributeName="opacity"
+                              values="0;1;1;0"
+                              keyTimes="0;0.15;0.85;1"
+                              dur="2.6s"
+                              begin={`${i * 0.7}s`}
+                              repeatCount="indefinite"
+                            />
+                          </circle>
+                        ))}
+                    </g>
+                  )}
+                </AnimatePresence>
 
-              return (
-                <g key={`dest-node-${d.id}`}>
-                  <circle
-                    cx={xy[0]}
-                    cy={xy[1]}
-                    r={isActive || isHovered ? 5.5 : 4}
-                    fill={isActive ? "var(--secondary)" : "var(--accent-blue)"}
-                    stroke="var(--white)"
-                    strokeWidth={1.2}
-                    className="is-clickable"
-                    onMouseEnter={() => setHoveredDest(d)}
-                    onMouseLeave={() => setHoveredDest(null)}
-                    onClick={() => handleSelect(d)}
-                  />
-                </g>
-              );
-            })}
+                {/* India — always-on glowing origin marker */}
+                {originXY && (
+                  <g>
+                    <circle cx={originXY[0]} cy={originXY[1]} r={22} fill="url(#sdMarkerGlow)" />
+                    <circle cx={originXY[0]} cy={originXY[1]} r={5} fill="var(--accent-blue)" stroke="var(--white)" strokeWidth={1.5} />
+                    <circle cx={originXY[0]} cy={originXY[1]} r={12} fill="none" stroke="var(--accent-blue)" strokeWidth={1} className="sd-map__pulse" />
+                    <text x={originXY[0]} y={originXY[1] - 14} textAnchor="middle" className="sd-map__origin-text">
+                      INDIA
+                    </text>
+                  </g>
+                )}
 
-            {(flying || arrived) && planeXY && (
-              <g transform={`translate(${planeXY[0]}, ${planeXY[1]}) rotate(${planeAngle})`}>
-                <foreignObject x={-10} y={-10} width={20} height={20}>
-                  <div style={{ color: "var(--secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Plane size={20} fill="var(--secondary)" strokeWidth={1.5} />
-                  </div>
-                </foreignObject>
-              </g>
-            )}
-          </svg>
+                {/* Plane, flying */}
+                {flying && planePoint && (
+                  <g transform={`translate(${planePoint[0]}, ${planePoint[1]}) rotate(${planeAngle})`}>
+                    <foreignObject x={-11} y={-11} width={22} height={22}>
+                      <div style={{ color: "var(--secondary)", display: "flex", alignItems: "center", justifyContent: "center", filter: "drop-shadow(0 0 4px var(--secondary))" }}>
+                        <Plane size={20} fill="var(--secondary)" strokeWidth={1.5} />
+                      </div>
+                    </foreignObject>
+                  </g>
+                )}
+
+                {/* Selected destination — single glowing marker with pulse */}
+                {arrived && selected && destXY[selected.id] && (
+                  <g>
+                    <circle cx={destXY[selected.id][0]} cy={destXY[selected.id][1]} r={22} fill="url(#sdMarkerGlow)" />
+                    <motion.circle
+                      cx={destXY[selected.id][0]}
+                      cy={destXY[selected.id][1]}
+                      r={5.5}
+                      fill="var(--secondary)"
+                      stroke="var(--white)"
+                      strokeWidth={1.5}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 16 }}
+                    />
+                    <circle cx={destXY[selected.id][0]} cy={destXY[selected.id][1]} r={12} fill="none" stroke="var(--secondary)" strokeWidth={1} className="sd-map__pulse" />
+                  </g>
+                )}
+              </motion.g>
+            </svg>
+          )}
         </div>
 
-        {/* ============ RIGHT SIDEBOARD CARD ============ */}
+        {/* ============ RIGHT: COUNTRY INFO CARD (old boarding-pass design) ============ */}
         <div className="sd-map__side">
           <AnimatePresence mode="wait">
             {!selected && (
@@ -288,7 +588,7 @@ const WorldMap = () => {
                   <MapPin size={22} />
                 </div>
                 <h4>Select Destination</h4>
-                <p>Click any active country or quick-chip to explore costs, timeline durations, and updated visa parameters.</p>
+                <p>Click any active country or quick-pick from the list to explore costs, timeline durations, and updated visa parameters.</p>
               </motion.div>
             )}
 
@@ -326,7 +626,9 @@ const WorldMap = () => {
                   <span className="sd-map__pass-flag">{selected.flag}</span>
                   <div>
                     <h3 className="sd-map__pass-name">{selected.name}</h3>
-                    <p className="sd-map__pass-tagline">{selected.tagline}</p>
+                    <p className="sd-map__pass-tagline">
+                      {selected.tagline || selected.description}
+                    </p>
                   </div>
                 </div>
 
@@ -347,7 +649,7 @@ const WorldMap = () => {
                     </div>
                     <div className="sd-map__card-info">
                       <span className="sd-map__card-label">ESTIMATED INVESTMENT</span>
-                      <span className="sd-map__card-value">{selected.avgCost}</span>
+                      <span className="sd-map__card-value">{selected.avgCost || selected.tuitionFee}</span>
                     </div>
                   </div>
 
@@ -365,7 +667,7 @@ const WorldMap = () => {
                 <div className="sd-map__pass-fields">
                   <p className="sd-map__fields-title">In-Demand Industries:</p>
                   <div className="sd-map__fields-grid">
-                    {selected.topFields?.map((f) => (
+                    {courses.map((f) => (
                       <span key={f} className="sd-map__pass-chip">
                         {f}
                       </span>
@@ -388,8 +690,8 @@ const WorldMap = () => {
           position: relative;
           overflow: hidden;
           background:
-            radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--primary) 22%, transparent) 0%, transparent 55%),
-            radial-gradient(110% 80% at 100% 100%, color-mix(in srgb, var(--accent-green) 12%, transparent) 0%, transparent 50%),
+            radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--primary) 24%, transparent) 0%, transparent 55%),
+            radial-gradient(110% 80% at 100% 100%, color-mix(in srgb, var(--accent-blue) 14%, transparent) 0%, transparent 50%),
             linear-gradient(180deg, var(--primary-dark) 0%, var(--bg-dark) 55%, var(--bg-dark) 100%);
           color: var(--text-white);
           padding: 5rem 0;
@@ -413,7 +715,7 @@ const WorldMap = () => {
           right: -8%;
           width: 420px;
           height: 420px;
-          background: color-mix(in srgb, var(--accent-blue) 18%, transparent);
+          background: color-mix(in srgb, var(--accent-blue) 20%, transparent);
         }
 
         .sd-map__glow--two {
@@ -421,7 +723,7 @@ const WorldMap = () => {
           left: -6%;
           width: 380px;
           height: 380px;
-          background: color-mix(in srgb, var(--accent-pink) 12%, transparent);
+          background: color-mix(in srgb, var(--primary) 22%, transparent);
         }
 
         .sd-map__head {
@@ -456,75 +758,161 @@ const WorldMap = () => {
           line-height: 1.6;
         }
 
-        .sd-map__chips {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 0.75rem;
-          padding: 0 1.5rem;
-          margin-bottom: 2.5rem;
-          max-width: 1000px;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .sd-map__chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: color-mix(in srgb, var(--white) 5%, transparent);
-          border: 1px solid var(--border-dark);
-          color: color-mix(in srgb, var(--white) 85%, transparent);
-          font-family: var(--font-main);
-          font-size: 0.85rem;
-          font-weight: 500;
-          padding: 0.55rem 1.1rem;
-          border-radius: var(--radius-md);
-          cursor: pointer;
-          transition: var(--transition);
-        }
-
-        .sd-map__chip-flag { font-size: 1.05rem; }
-
-        .sd-map__chip:hover { 
-          border-color: var(--primary); 
-          background: color-mix(in srgb, var(--primary) 15%, transparent);
-          color: var(--white);
-        }
-
-        .sd-map__chip.is-active {
-          background: var(--primary);
-          border-color: transparent;
-          color: var(--white);
-          box-shadow: var(--shadow-md);
-        }
-
-        .sd-map__chip:disabled { opacity: 0.5; cursor: not-allowed; }
-
+        /* ===== BODY: 3-column grid — list | canvas | card ===== */
         .sd-map__body {
           position: relative;
           z-index: 1;
           flex: 1;
           display: grid;
-          grid-template-columns: 73% 27%;
-          gap: 2rem;
-          max-width: 1440px;
+          grid-template-columns: 270px 1fr 330px;
+          gap: 1.5rem;
+          max-width: 1680px;
           width: 100%;
           margin: 0 auto;
           padding: 0 2rem;
           align-items: stretch;
         }
 
+        /* ===== COUNTRY LIST (glassmorphism panel) ===== */
+        .sd-map__directory {
+          display: flex;
+          flex-direction: column;
+          min-height: 640px;
+          max-height: 640px;
+          border-radius: var(--radius-lg, 22px);
+          border: 1px solid var(--border-dark);
+          background: color-mix(in srgb, var(--bg-dark) 72%, transparent);
+          backdrop-filter: blur(22px);
+          box-shadow: var(--shadow-lg);
+          overflow: hidden;
+        }
+
+        .sd-map__directory-search {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 1.1rem 1.2rem;
+          border-bottom: 1px solid var(--border-dark);
+          flex-shrink: 0;
+        }
+
+        .sd-map__directory-search-icon { color: var(--text-light); flex-shrink: 0; }
+
+        .sd-map__directory-search input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: var(--white);
+          font-family: var(--font-main);
+          font-size: 0.88rem;
+        }
+
+        .sd-map__directory-search input::placeholder { color: var(--text-light); }
+
+        .sd-map__directory-clear {
+          background: color-mix(in srgb, var(--white) 8%, transparent);
+          border: none;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-light);
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+
+        .sd-map__directory-clear:hover { color: var(--white); background: color-mix(in srgb, var(--white) 16%, transparent); }
+
+        .sd-map__directory-list {
+          flex: 1;
+          overflow-y: auto;
+          padding: 0.9rem 0.9rem 1.1rem;
+        }
+
+        .sd-map__directory-list::-webkit-scrollbar { width: 6px; }
+        .sd-map__directory-list::-webkit-scrollbar-track { background: transparent; }
+        .sd-map__directory-list::-webkit-scrollbar-thumb {
+          background: color-mix(in srgb, var(--white) 15%, transparent);
+          border-radius: 10px;
+        }
+        .sd-map__directory-list::-webkit-scrollbar-thumb:hover {
+          background: color-mix(in srgb, var(--white) 25%, transparent);
+        }
+
+        .sd-map__directory-empty {
+          padding: 2rem 1rem;
+          text-align: center;
+          color: var(--text-light);
+          font-size: 0.85rem;
+        }
+
+        .sd-map__directory-group { margin-bottom: 0.9rem; }
+
+        .sd-map__directory-region {
+          padding: 0.3rem 0.4rem 0.55rem;
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--accent-blue);
+        }
+
+        .sd-map__directory-pills {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .sd-map__pill {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          width: 100%;
+          background: color-mix(in srgb, var(--white) 4%, transparent);
+          border: 1px solid transparent;
+          border-radius: 999px;
+          padding: 0.55rem 0.9rem;
+          cursor: pointer;
+          text-align: left;
+          transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sd-map__pill:hover {
+          background: color-mix(in srgb, var(--white) 9%, transparent);
+          border-color: color-mix(in srgb, var(--accent-blue) 30%, transparent);
+        }
+
+        .sd-map__pill.is-active {
+          background: color-mix(in srgb, var(--primary) 45%, transparent);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 60%, transparent),
+                      0 0 22px color-mix(in srgb, var(--primary) 55%, transparent);
+        }
+
+        .sd-map__pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .sd-map__pill-flag { font-size: 1.05rem; line-height: 1; }
+
+        .sd-map__pill-name {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: color-mix(in srgb, var(--white) 88%, transparent);
+        }
+
+        .sd-map__pill.is-active .sd-map__pill-name { color: var(--white); font-weight: 600; }
+
+        /* ===== MAP CANVAS ===== */
         .sd-map__canvas {
           position: relative;
-          min-height: 520px;
-          border-radius: var(--radius-lg);
+          min-height: 640px;
+          border-radius: var(--radius-lg, 22px);
           overflow: hidden;
-          background: color-mix(in srgb, var(--bg-dark) 82%, var(--white) 3%);
+          background: color-mix(in srgb, var(--bg-dark) 84%, var(--white) 2%);
           border: 1px solid var(--border-dark);
-          box-shadow: inset 0 0 40px color-mix(in srgb, var(--black) 40%, transparent);
+          box-shadow: inset 0 0 44px color-mix(in srgb, var(--black) 42%, transparent);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -534,6 +922,13 @@ const WorldMap = () => {
           width: 100%;
           height: 100%;
           display: block;
+        }
+
+        .sd-map__loading-state {
+          color: var(--text-light);
+          font-size: 0.9rem;
+          font-weight: 500;
+          letter-spacing: 0.03em;
         }
 
         .sd-map__hud {
@@ -550,14 +945,16 @@ const WorldMap = () => {
           gap: 0.6rem;
           backdrop-filter: blur(8px);
           box-shadow: var(--shadow-sm);
+          max-width: calc(100% - 2.5rem);
         }
 
         .sd-map__hud-dot {
           width: 7px;
           height: 7px;
           border-radius: 50%;
-          background: var(--accent-green);
-          box-shadow: 0 0 8px var(--accent-green);
+          background: var(--accent-blue);
+          box-shadow: 0 0 8px var(--accent-blue);
+          flex-shrink: 0;
         }
 
         .sd-map__hud-text {
@@ -565,6 +962,9 @@ const WorldMap = () => {
           font-weight: 600;
           letter-spacing: 0.05em;
           color: var(--text-light);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .sd-map__country {
@@ -573,8 +973,8 @@ const WorldMap = () => {
         }
 
         .sd-map__country.is-clickable { cursor: pointer; }
-        .sd-map__country.is-clickable:hover { 
-          fill: color-mix(in srgb, var(--primary) 50%, transparent) !important; 
+        .sd-map__country.is-clickable:hover {
+          fill: color-mix(in srgb, var(--primary) 45%, transparent) !important;
         }
 
         .sd-map__pulse {
@@ -599,19 +999,21 @@ const WorldMap = () => {
 
         .sd-map__origin-text {
           font-family: var(--font-main);
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
-          fill: var(--accent-green);
+          letter-spacing: 0.05em;
+          fill: var(--accent-blue);
           pointer-events: none;
         }
 
+        /* ===== INFO CARD (boarding-pass design, glassmorphism) ===== */
         .sd-map__side {
           position: relative;
-          min-height: 520px;
-          border-radius: var(--radius-lg);
+          min-height: 640px;
+          border-radius: var(--radius-lg, 22px);
           border: 1px solid var(--border-dark);
-          background: color-mix(in srgb, var(--bg-dark) 75%, transparent);
-          backdrop-filter: blur(20px);
+          background: color-mix(in srgb, var(--bg-dark) 68%, transparent);
+          backdrop-filter: blur(24px);
           box-shadow: var(--shadow-lg);
           display: flex;
           flex-direction: column;
@@ -639,7 +1041,7 @@ const WorldMap = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: color-mix(in srgb, var(--primary) 12%, transparent);
+          background: color-mix(in srgb, var(--primary) 14%, transparent);
           border: 1px solid var(--primary);
           color: var(--accent-blue);
           margin-bottom: 0.5rem;
@@ -673,6 +1075,7 @@ const WorldMap = () => {
           padding: 1.75rem;
           display: flex;
           flex-direction: column;
+          overflow-y: auto;
         }
 
         .sd-map__pass-header {
@@ -705,14 +1108,14 @@ const WorldMap = () => {
         .sd-map__pass-name {
           font-size: 1.35rem;
           font-weight: 700;
-          margin: 0 0 0.25rem;
+          margin: 0 0 0.3rem;
           color: var(--white);
         }
 
         .sd-map__pass-tagline {
           color: var(--text-light);
           font-size: 0.85rem;
-          line-height: 1.5;
+          line-height: 1.55;
           margin: 0;
         }
 
@@ -741,7 +1144,7 @@ const WorldMap = () => {
           align-items: center;
           justify-content: center;
         }
-        
+
         .sd-map__card-icon.color-duration { background: color-mix(in srgb, var(--accent-blue) 10%, transparent); color: var(--accent-blue); }
         .sd-map__card-icon.color-cost { background: color-mix(in srgb, var(--accent-green) 10%, transparent); color: var(--accent-green); }
         .sd-map__card-icon.color-visa { background: color-mix(in srgb, var(--secondary) 10%, transparent); color: var(--secondary); }
@@ -804,19 +1207,42 @@ const WorldMap = () => {
           transition: var(--transition);
         }
 
-        .sd-map__pass-cta:hover { 
-          transform: translateY(-2px); 
+        .sd-map__pass-cta:hover {
+          transform: translateY(-2px);
           box-shadow: 0 10px 25px color-mix(in srgb, var(--accent-green) 25%, transparent);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1280px) {
+          .sd-map__body {
+            grid-template-columns: 250px 1fr;
+            grid-template-areas:
+              "directory canvas"
+              "directory side";
+          }
+          .sd-map__directory { grid-area: directory; }
+          .sd-map__canvas { grid-area: canvas; }
+          .sd-map__side { grid-area: side; min-height: auto; }
         }
 
         @media (max-width: 1024px) {
           .sd-map__body {
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            grid-template-areas:
+              "directory"
+              "canvas"
+              "side";
+            gap: 1.25rem;
             padding: 0 1.5rem;
           }
+          .sd-map__directory { max-height: 320px; min-height: 260px; }
           .sd-map__canvas { min-height: 420px; }
           .sd-map__side { min-height: auto; }
+        }
+
+        @media (max-width: 560px) {
+          .sd-map__body { padding: 0 1.1rem; }
+          .sd-map__directory { max-height: 280px; }
         }
       `}</style>
     </section>
