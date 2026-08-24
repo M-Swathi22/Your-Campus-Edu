@@ -495,7 +495,7 @@ export const courseCategories = [
     },
     {
       name: "MBA Airport Management",
-      duration: "2 Years"
+      duration: "2 Years"   
     },
     {
       name: "MBA Retail Management",

@@ -614,7 +614,7 @@ const WorldMap = () => {
                   </div>
                 </div>
 
-                <Link to={`/study-destination/${selected.id}`} className="sd-map__pass-cta">
+                <Link to={`/study-abroad/${selected.id}`} className="sd-map__pass-cta">
                   <span>Explore {selected.name}</span>
                   <ArrowRight size={16} />
                 </Link>

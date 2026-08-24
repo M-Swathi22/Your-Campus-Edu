@@ -1,10 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { CompassIcon } from "lucide-react";
 
-import CountryHero from "../components/study-destination/country-details/CountryHero";
-import WhyChooseCountry from "../components/study-destination/country-details/WhyChooseCountry";
-import UniversitySection from "../components/study-destination/country-details/UniversitySection";
-import CountryCTA from "../components/study-destination/country-details/CountryCTA";
+import CountryHero from "../components/study-abroad/country-details/CountryHero";
+import WhyChooseCountry from "../components/study-abroad/country-details/WhyChooseCountry";
+import UniversitySection from "../components/study-abroad/country-details/UniversitySection";
+import CountryCTA from "../components/study-abroad/country-details/CountryCTA";
 
 import countryDetails from "../Data/countryDetails";
 import universitiesData from "../Data/universitiesData";
@@ -20,7 +20,7 @@ export default function CountryDetails() {
         <CompassIcon size={40} strokeWidth={1.6} />
         <h1>We couldn't find that destination</h1>
         <p>The country you're looking for isn't on our board yet. Try another gate.</p>
-        <Link to="/study-destination" className="country-not-found__link">
+        <Link to="/study-abroad" className="country-not-found__link">
           Back to Study Destinations
         </Link>
 

@@ -13,7 +13,7 @@ import EligibilityChecker from "./pages/EligibilityChecker";
 import BudgetCalculator from "./pages/BudgetCalculator";
 import CompareColleges from "./pages/CompareColleges";
 import CountryFitQuiz from "./pages/CountryFitQuiz";
-import StudyDestination from "./pages/StudyDestination";
+import StudyAbroad from "./pages/StudyAbroad";
 import Contact from "./pages/Contact";
 import StudyIndia from "./pages/StudyIndia";
 import CategoryPage from "./pages/study-india/CategoryPage";
@@ -52,8 +52,8 @@ function App() {
         <Route path="/budget-calculator" element={<BudgetCalculator />} />
         <Route path="/compare-colleges" element={<CompareColleges />} />
         <Route path="/country-fit-quiz" element={<CountryFitQuiz />} />
-        <Route path="/study-destination" element={<StudyDestination/>} />
-        <Route path="/study-destination/:countryId" element={<CountryDetails />}/>
+        <Route path="/study-abroad" element={<StudyAbroad/>} />
+        <Route path="/study-abroad/:countryId" element={<CountryDetails />}/>
         <Route path="/contact" element={<Contact/>} />   
         <Route path="/study-india" element={<StudyIndia />} />
         <Route path="/study-india/:categoryId" element={<CategoryPage />} />

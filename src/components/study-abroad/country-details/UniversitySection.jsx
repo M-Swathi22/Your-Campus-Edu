@@ -68,7 +68,7 @@ export default function UniversitySection({ universities, countryName, countryId
                   </span>
                 </div>
 
-                <Link to={`/study-destination/university/${uni.slug}`} className="university-card__btn">
+                <Link to={`/study-abroad/university/${uni.slug}`} className="university-card__btn">
                   <span>View University</span>
                   <ArrowRight size={16} strokeWidth={2.2} />
                 </Link>
@@ -84,7 +84,7 @@ export default function UniversitySection({ universities, countryName, countryId
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Link to={`/study-destination/universities?country=${countryId}`} className="university-section__viewall">
+          <Link to={`/study-abroad/universities?country=${countryId}`} className="university-section__viewall">
             <span>View All Universities</span>
             <ArrowUpRight size={17} strokeWidth={2.2} />
           </Link>

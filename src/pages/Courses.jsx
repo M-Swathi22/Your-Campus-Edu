@@ -5,7 +5,7 @@ import CourseFinder from "../components/courses/CourseFinder";
 import CourseResults from "../components/courses/CourseResults";
 import CoursesCTA from "../components/courses/CourseCTA";
 
-import { courseCategories } from "../data/courses";
+import { courseCategories } from "../Data/Courses";
 
 export default function Courses() {
   const [search, setSearch] = useState("");

@@ -27,7 +27,7 @@ const quickLinks = [
   { label: "About", link: "/about" },
   { label: "Courses", link: "/courses" },
   { label: "Study India", link: "/study-india" },
-  { label: "StudyDestination", link: "/study-destination" },
+  { label: "Study Abroad", link: "/study-abroad" },
   { label: "Contact", link: "/contact" },
 ];
 

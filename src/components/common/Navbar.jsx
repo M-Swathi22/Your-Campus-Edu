@@ -31,7 +31,7 @@ const NAV_LINKS_LEFT = [
 // ── MBBS Abroad added here — it will now automatically render in the
 // desktop nav (mapped below) since it lives in NAV_LINKS_RIGHT.
 const NAV_LINKS_RIGHT = [
-  { to: "/study-destination", label: "StudyDestination" },
+  { to: "/study-abroad", label: "Study Abroad" },
   { to: "/accommodation",     label: "Accommodation"    },
   { to: "/mbbs-abroad",       label: "MBBS Abroad"      },
 ];
