@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import * as Icons from "lucide-react";
 import { ArrowUpRight, ImageOff, BookMarked } from "lucide-react";
-import { courseCategories } from "../../data/indianCourses";
+import { courseCategories } from "../../Data/indianCourses";
 
 function CategoryImage({ src, alt }) {
   const [errored, setErrored] = useState(false);

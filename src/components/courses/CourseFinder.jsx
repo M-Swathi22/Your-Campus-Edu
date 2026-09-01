@@ -1,6 +1,7 @@
 import { Search, X, ChevronRight } from "lucide-react";
 
 const categories = [
+  "All",
   "Medical",
   "Paramedical & Nursing",
   "Pharmaceutical",
@@ -108,14 +109,14 @@ export default function CourseFinder({ search, setSearch, category, setCategory 
           </div>
         </div>
 
-        {/* Active filter indicator */}
-        {category && (
+        {/* Active filter indicator — only for a specific category, not "All" */}
+        {category && category !== "All" && (
           <div className="cfi-active-filter">
             <span className="cfi-active-filter-label">Showing:</span>
             <span className="cfi-active-filter-value">{category}</span>
             <button
               className="cfi-active-filter-clear"
-              onClick={() => setCategory("")}
+              onClick={() => setCategory("All")}
               aria-label={`Remove ${category} filter`}
             >
               <X size={12} />
