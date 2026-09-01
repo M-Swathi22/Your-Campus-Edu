@@ -1,5 +1,5 @@
 /**
- * eligibilityRules.js
+ * eligibilityrules.js
  * Source of truth for all eligibility criteria used in the AI prompt
  * and for any local pre-validation before the AI call.
  */
@@ -79,157 +79,108 @@ export const DOMESTIC_RULES = {
     notes: "CUET score required for DU, BHU, JNU and other central universities.",
   },
   ComputerScience: {
-  label: "Computer Science / IT",
-  stream: ["Science (Maths)", "Computer Science"],
-  minPercentage: 45,
-  entranceExams: ["JEE Main", "CUET", "State Counselling"],
-  subjects: ["Mathematics"],
-}
+    label: "Computer Science / IT",
+    stream: ["Science (Maths)", "Computer Science"],
+    minPercentage: 45,
+    entranceExams: ["JEE Main", "CUET", "State Counselling"],
+    subjects: ["Mathematics"],
+  },
 };
 
-/* ─── ABROAD Destinations ─── */
-export const ABROAD_RULES = {
-  USA: {
-    label: "United States",
-    flag: "🇺🇸",
-    ugRequirements: {
-      minPercentage: 75,
-      englishTests: ["TOEFL (80+)", "IELTS (6.5+)", "Duolingo (105+)"],
-      aptitudeTests: ["SAT (1100+)", "ACT (22+)"],
-      extras: ["Essays / Personal Statement", "Letters of Recommendation", "Extracurriculars"],
-    },
-    pgRequirements: {
-      minPercentage: 60,
-      englishTests: ["TOEFL (90+)", "IELTS (7.0+)"],
-      aptitudeTests: ["GRE (300+)", "GMAT (600+) for MBA"],
-      extras: ["SOP", "LORs", "Resume / CV"],
-    },
-    avgTuition: "$25,000 – $55,000 / year",
-    intakes: ["Fall (Sep)", "Spring (Jan)"],
-    visaType: "F-1 Student Visa",
-    notes: "Most selective universities use holistic admissions — grades alone aren't enough.",
-  },
-  UK: {
-    label: "United Kingdom",
-    flag: "🇬🇧",
+/* ─── ABROAD eligibility tiers ───
+   Country lists, flags, tuition, intakes, and visa data all live in
+   countryDetails.js — that file is the single source of truth for
+   *which* countries are shown. This file only owns the academic
+   eligibility thresholds, grouped into the same four tiers already
+   implied by each country's description/tagline in countryDetails.js:
+   Established / No-tuition / Budget / Niche. Matching is done by
+   scanning that description text, so adding or editing a country in
+   countryDetails.js automatically slots it into the right tier here —
+   no need to keep two country lists in sync by hand.
+*/
+export const ABROAD_TIERS = {
+  ESTABLISHED: {
+    key: "ESTABLISHED",
+    match: "well-established higher-education system",
     ugRequirements: {
       minPercentage: 70,
       englishTests: ["IELTS (6.0–6.5+)", "TOEFL (80+)"],
-      aptitudeTests: ["None typically", "UCAT / BMAT for Medicine"],
-      extras: ["UCAS Personal Statement", "Reference Letter"],
+      aptitudeTests: ["None typically", "Programme-specific entrance test for Medicine/Law"],
+      extras: ["Statement of Purpose", "Reference Letter", "Transcripts"],
     },
     pgRequirements: {
       minPercentage: 55,
       englishTests: ["IELTS (6.5–7.0+)", "TOEFL (88+)"],
       aptitudeTests: ["GMAT (600+) for MBA"],
-      extras: ["SOP", "Academic References"],
+      extras: ["SOP", "Academic References", "Resume / CV"],
     },
-    avgTuition: "£12,000 – £38,000 / year",
-    intakes: ["September", "January (limited)"],
-    visaType: "UK Student Visa (Tier 4)",
-    notes: "3-year UG degrees. Russell Group unis are highly competitive.",
   },
-  Canada: {
-    label: "Canada",
-    flag: "🇨🇦",
+  NO_TUITION: {
+    key: "NO_TUITION",
+    match: "little to no tuition",
     ugRequirements: {
-      minPercentage: 70,
-      englishTests: ["IELTS (6.0+)", "TOEFL (80+)", "Duolingo (110+)"],
+      minPercentage: 60,
+      englishTests: ["IELTS (6.0+)", "Local-language B2/C1 for local-taught courses"],
       aptitudeTests: ["None typically"],
-      extras: ["Statement of Purpose", "Transcripts"],
-    },
-    pgRequirements: {
-      minPercentage: 60,
-      englishTests: ["IELTS (6.5+)", "TOEFL (90+)"],
-      aptitudeTests: ["GRE / GMAT (program-dependent)"],
-      extras: ["SOP", "LORs", "Research Proposal (for research programs)"],
-    },
-    avgTuition: "CAD 20,000 – 40,000 / year",
-    intakes: ["September", "January", "May (some programs)"],
-    visaType: "Canadian Study Permit",
-    notes: "Post-graduation work permit (PGWP) up to 3 years. Strong PR pathway.",
-  },
-  Australia: {
-    label: "Australia",
-    flag: "🇦🇺",
-    ugRequirements: {
-      minPercentage: 65,
-      englishTests: ["IELTS (6.0+)", "TOEFL (79+)", "PTE (58+)"],
-      aptitudeTests: ["UMAT for Medicine / Dentistry"],
-      extras: ["SOP", "Transcripts"],
+      extras: ["Proof of Funds / Blocked Account", "Country-specific recognition certificate (e.g. APS for Germany)"],
     },
     pgRequirements: {
       minPercentage: 55,
-      englishTests: ["IELTS (6.5+)", "TOEFL (84+)", "PTE (64+)"],
-      aptitudeTests: ["GMAT for MBA (some unis)"],
-      extras: ["SOP", "References"],
-    },
-    avgTuition: "AUD 22,000 – 45,000 / year",
-    intakes: ["February", "July"],
-    visaType: "Student Visa (Subclass 500)",
-    notes: "485 Graduate visa allows 2–4 years post-study work rights.",
-  },
-  Germany: {
-    label: "Germany",
-    flag: "🇩🇪",
-    ugRequirements: {
-      minPercentage: 60,
-      englishTests: ["IELTS (6.0+) or German B2/C1 for German-taught courses"],
-      aptitudeTests: ["None typically", "TestAS recommended"],
-      extras: ["APS Certificate (for Indian students)", "Blocked Account (€11,208)"],
-    },
-    pgRequirements: {
-      minPercentage: 55,
-      englishTests: ["IELTS (6.5+) or German B2+"],
+      englishTests: ["IELTS (6.5+)", "Local-language B2+"],
       aptitudeTests: ["GRE optional"],
-      extras: ["APS Certificate", "Blocked Account", "SOP"],
+      extras: ["Proof of Funds / Blocked Account", "SOP"],
     },
-    avgTuition: "€0 – €3,000 / year (most public unis free)",
-    intakes: ["Winter (Oct)", "Summer (Apr)"],
-    visaType: "German Student Visa",
-    notes: "APS certificate is mandatory for Indian students. Mostly free public universities.",
   },
-  Ireland: {
-    label: "Ireland",
-    flag: "🇮🇪",
+  BUDGET: {
+    key: "BUDGET",
+    match: "cost-effective entry point",
     ugRequirements: {
-      minPercentage: 65,
-      englishTests: ["IELTS (6.0+)", "TOEFL (80+)"],
+      minPercentage: 55,
+      englishTests: ["IELTS (6.0+)", "TOEFL (70+)"],
       aptitudeTests: ["None typically"],
       extras: ["SOP", "Transcripts"],
     },
     pgRequirements: {
-      minPercentage: 55,
-      englishTests: ["IELTS (6.5+)", "TOEFL (88+)"],
-      aptitudeTests: ["GMAT for MBA"],
+      minPercentage: 50,
+      englishTests: ["IELTS (6.0–6.5+)", "TOEFL (75+)"],
+      aptitudeTests: ["None typically"],
       extras: ["SOP", "LORs"],
     },
-    avgTuition: "€10,000 – €25,000 / year",
-    intakes: ["September", "January (limited)"],
-    visaType: "Irish Study Visa",
-    notes: "2-year stay-back option post-graduation. Tech hub for EU access.",
   },
-  NewZealand: {
-    label: "New Zealand",
-    flag: "🇳🇿",
+  NICHE: {
+    key: "NICHE",
+    match: "very small higher-education market",
     ugRequirements: {
-      minPercentage: 60,
-      englishTests: ["IELTS (6.0+)", "TOEFL (80+)", "PTE (50+)"],
-      aptitudeTests: ["None typically"],
-      extras: ["SOP", "Transcripts"],
+      minPercentage: 50,
+      englishTests: ["IELTS (6.0+) — programme dependent"],
+      aptitudeTests: ["Contact advisor — limited programmes"],
+      extras: ["Contact advisor for current requirements"],
     },
     pgRequirements: {
-      minPercentage: 55,
-      englishTests: ["IELTS (6.5+)", "TOEFL (90+)"],
-      aptitudeTests: ["GMAT optional"],
-      extras: ["SOP", "References"],
+      minPercentage: 50,
+      englishTests: ["IELTS (6.0+) — programme dependent"],
+      aptitudeTests: ["Contact advisor — limited programmes"],
+      extras: ["Contact advisor for current requirements"],
     },
-    avgTuition: "NZD 22,000 – 35,000 / year",
-    intakes: ["February", "July"],
-    visaType: "Student Visa",
-    notes: "3-year open work visa post-graduation for most degrees.",
   },
 };
+
+/* Detects which tier a country belongs to, using its description
+   in countryDetails.js. Defaults to BUDGET (the most common tier)
+   if nothing matches. */
+export function getAbroadTier(country) {
+  if (!country) return ABROAD_TIERS.BUDGET;
+  const desc = (country.description || "").toLowerCase();
+  const tier = Object.values(ABROAD_TIERS).find((t) => desc.includes(t.match));
+  return tier || ABROAD_TIERS.BUDGET;
+}
+
+/* Returns the UG or PG requirement band for a given country object
+   (as found in countryDetails.js) and study level. */
+export function getAbroadRequirements(country, studyLevel) {
+  const tier = getAbroadTier(country);
+  return studyLevel === "PG" || studyLevel === "PhD" ? tier.pgRequirements : tier.ugRequirements;
+}
 
 /* ─── Course-specific eligibility quick map (used in AI prompt) ─── */
 export const COURSE_ELIGIBILITY_MAP = [

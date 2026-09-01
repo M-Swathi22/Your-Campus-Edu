@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Sparkles, ArrowRight, AlertCircle, ArrowLeft } from "lucide-react";
-import { DOMESTIC_RULES } from "../../data/eligibilityRules";
+import { DOMESTIC_RULES } from "../../Data/eligibilityrules";
 import EligibilityProgressBar from "./EligibilityProgressBar";
 
 const STEPS = [

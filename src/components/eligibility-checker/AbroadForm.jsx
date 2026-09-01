@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Sparkles, ArrowRight, AlertCircle, ArrowLeft } from "lucide-react";
-import { ABROAD_RULES } from "../../data/eligibilityRules";
+import { destinations } from "../../Data/countrydetails";
 
-const DESTINATION_OPTIONS = Object.entries(ABROAD_RULES).map(([key, r]) => ({
-  label: `${r.flag} ${r.label}`,
-  value: key,
+const DESTINATION_OPTIONS = destinations.map((c) => ({
+  label: `${c.flag} ${c.name}`,
+  value: c.id,
 }));
 
 const STEPS = [
