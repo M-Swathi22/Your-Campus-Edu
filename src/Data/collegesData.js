@@ -4,6 +4,7 @@
 /*  list always resolves through State → City → Colleges.             */
 /* ================================================================== */
 import { getStateById, getCityById } from "./indianStates";
+import { destinations, origin } from "../Data/countrydetails"; // ← study-abroad country list
 
 export const COLLEGE_TYPES = ["Government", "Private", "Autonomous", "Deemed", ];
 
@@ -311,13 +312,18 @@ function toCompareShape(c) {
 }
 
 export const COLLEGES = curatedColleges.map(toCompareShape);
+
+/* Country picker for the "AI Discovery" compare-form mode.
+   Sourced from countryDetails.js (single source of truth for every study
+   destination) instead of a separate hardcoded list, so adding/removing a
+   destination country there automatically updates this dropdown too.
+   India (the `origin`) is pinned first, the rest are alphabetical. */
 export const COUNTRY_OPTIONS = [
-  { label: "India", value: "India" },
-  { label: "USA", value: "USA" },
-  { label: "Canada", value: "Canada" },
-  { label: "United Kingdom", value: "United Kingdom" },
-  { label: "Australia", value: "Australia" },
-  { label: "Germany", value: "Germany" },
+  { label: `${origin.flag} ${origin.name}`, value: origin.name },
+  ...destinations
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({ label: `${c.flag} ${c.name}`, value: c.name })),
 ];
 
 export const FIELD_OPTIONS = [

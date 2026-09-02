@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Sparkles, ArrowRight, ArrowLeft, AlertCircle,
   X, Search, GitCompareArrows, Wand2, Plus, Building2
 } from "lucide-react";
 import { searchColleges } from "../../utils/compareCalculator";
-import { COUNTRY_OPTIONS, FIELD_OPTIONS, PRIORITY_OPTIONS } from "../../data/collegesData";
+import { COUNTRY_OPTIONS, FIELD_OPTIONS, PRIORITY_OPTIONS } from "../../Data/collegesData";
 
 /* ─── Chip ─── */
 function Chip({ label, selected, onClick, variant = "p" }) {
@@ -84,6 +84,54 @@ function CollegeInput({ value, onChange, onRemove, placeholder, index }) {
               </div>
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Country picker: search box + scrollable chip list ─── */
+function CountryPicker({ selected, onToggle }) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return COUNTRY_OPTIONS;
+    const q = query.toLowerCase();
+    return COUNTRY_OPTIONS.filter((c) => c.label.toLowerCase().includes(q));
+  }, [query]);
+
+  return (
+    <div>
+      <div className="cf2-country-search">
+        <Search size={13} className="cf2-country-search-icon" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search countries…"
+          className="cf2-country-search-inp"
+        />
+      </div>
+
+      <div className="cf2-chips cf2-chips--scroll">
+        {filtered.length > 0 ? (
+          filtered.map((c) => (
+            <Chip
+              key={c.value}
+              label={c.label}
+              selected={selected.includes(c.value)}
+              onClick={() => onToggle(c.value)}
+              variant="i"
+            />
+          ))
+        ) : (
+          <div className="cf2-country-empty">No countries match "{query}".</div>
+        )}
+      </div>
+
+      {selected.length > 0 && (
+        <div className="cf2-country-selected">
+          Selected: {selected.join(", ")}
         </div>
       )}
     </div>
@@ -332,11 +380,7 @@ export default function CompareForm({ onSubmit }) {
                   <label className="cf2-label">
                     Preferred countries <span className="cf2-label-hint">(optional)</span>
                   </label>
-                  <div className="cf2-chips">
-                    {COUNTRY_OPTIONS.map((c) => (
-                      <Chip key={c.value} label={c.label} selected={countries.includes(c.value)} onClick={() => toggleCountry(c.value)} variant="i" />
-                    ))}
-                  </div>
+                  <CountryPicker selected={countries} onToggle={toggleCountry} />
                 </div>
 
                 <div className="cf2-fg">
@@ -486,7 +530,6 @@ export default function CompareForm({ onSubmit }) {
 
         .cf2-mcard:first-child { border-right: 1.5px solid var(--border); }
 
-        /* radial wash on hover */
         .cf2-mcard::after {
           content: '';
           position: absolute;
@@ -509,7 +552,6 @@ export default function CompareForm({ onSubmit }) {
         .cf2-mcard--p:hover { background: color-mix(in srgb, var(--primary) 2%, white); }
         .cf2-mcard--i:hover { background: color-mix(in srgb, var(--extra-indigo) 2%, white); }
 
-        /* large ghost number */
         .cf2-mcard-num {
           width: 44px;
           height: 44px;
@@ -527,7 +569,6 @@ export default function CompareForm({ onSubmit }) {
         .cf2-mcard--p .cf2-mcard-num { background: var(--primary-light); color: var(--primary); }
         .cf2-mcard--i .cf2-mcard-num { background: color-mix(in srgb, var(--extra-indigo) 10%, transparent); color: var(--extra-indigo); }
 
-        /* accent rule */
         .cf2-mcard-rule {
           width: 32px;
           height: 2px;
@@ -573,7 +614,6 @@ export default function CompareForm({ onSubmit }) {
           z-index: 1;
         }
 
-        /* pill CTA */
         .cf2-mcard-btn {
           display: inline-flex;
           align-items: center;
@@ -609,7 +649,6 @@ export default function CompareForm({ onSubmit }) {
         .cf2-mcard-arrow { transition: transform .2s; }
         .cf2-mcard:hover .cf2-mcard-arrow { transform: translateX(3px); }
 
-        /* watermark deco */
         .cf2-mcard-deco {
           position: absolute;
           bottom: 16px;
@@ -636,7 +675,6 @@ export default function CompareForm({ onSubmit }) {
           overflow: hidden;
         }
 
-        /* top bar */
         .cf2-panel-bar {
           padding: 18px 32px;
           border-bottom: 1.5px solid var(--border);
@@ -680,7 +718,6 @@ export default function CompareForm({ onSubmit }) {
 
         .cf2-back:hover { color: var(--text-dark); background: var(--bg-light); }
 
-        /* two-column body */
         .cf2-panel-body {
           display: grid;
           grid-template-columns: 200px 1fr;
@@ -691,7 +728,6 @@ export default function CompareForm({ onSubmit }) {
           .cf2-sidebar { display: none; }
         }
 
-        /* ── sidebar ── */
         .cf2-sidebar {
           padding: 32px 22px;
           border-right: 1.5px solid var(--border);
@@ -756,7 +792,6 @@ export default function CompareForm({ onSubmit }) {
           background: var(--border);
         }
 
-        /* ── form area ── */
         .cf2-form-area {
           padding: 32px 36px;
         }
@@ -783,11 +818,67 @@ export default function CompareForm({ onSubmit }) {
 
         .cf2-required { color: var(--danger); }
 
-        /* ── chips ── */
         .cf2-chips {
           display: flex;
           flex-wrap: wrap;
           gap: 7px;
+        }
+
+        /* ── country picker: scrollable chip list ── */
+        .cf2-country-search {
+          position: relative;
+          margin-bottom: 10px;
+        }
+
+        .cf2-country-search-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--text-light);
+          pointer-events: none;
+        }
+
+        .cf2-country-search-inp {
+          width: 100%;
+          height: 40px;
+          border: 1.5px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 0 14px 0 36px;
+          font-size: 13px;
+          font-family: inherit;
+          color: var(--text-dark);
+          outline: none;
+          transition: all .2s;
+          background: var(--bg-main);
+          box-sizing: border-box;
+        }
+
+        .cf2-country-search-inp:focus {
+          border-color: var(--extra-indigo);
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--extra-indigo) 10%, transparent);
+        }
+
+        .cf2-chips--scroll {
+          max-height: 220px;
+          overflow-y: auto;
+          padding: 12px;
+          border: 1.5px solid var(--border);
+          border-radius: var(--radius-md);
+          background: var(--bg-light);
+        }
+
+        .cf2-country-empty {
+          font-size: 12.5px;
+          color: var(--text-light);
+          padding: 4px 2px;
+        }
+
+        .cf2-country-selected {
+          font-size: 11.5px;
+          color: var(--text-light);
+          margin-top: 8px;
+          line-height: 1.5;
         }
 
         .cf2-chip {
@@ -825,7 +916,6 @@ export default function CompareForm({ onSubmit }) {
           font-weight: 600;
         }
 
-        /* ── college inputs ── */
         .cf2-inputs-stack {
           display: flex;
           flex-direction: column;
@@ -906,7 +996,6 @@ export default function CompareForm({ onSubmit }) {
           color: var(--danger);
         }
 
-        /* dropdown */
         .cf2-dropdown {
           position: absolute;
           top: 50px;
@@ -951,7 +1040,6 @@ export default function CompareForm({ onSubmit }) {
           color: var(--text-light);
         }
 
-        /* add slot */
         .cf2-add-slot {
           width: 100%;
           padding: 11px;
@@ -975,7 +1063,6 @@ export default function CompareForm({ onSubmit }) {
           background: var(--primary-light);
         }
 
-        /* separator */
         .cf2-sep {
           height: 1px;
           background: var(--border);
@@ -983,7 +1070,6 @@ export default function CompareForm({ onSubmit }) {
           margin: 8px 0 24px 0;
         }
 
-        /* textarea */
         .cf2-textarea {
           width: 100%;
           min-height: 80px;
@@ -1004,7 +1090,6 @@ export default function CompareForm({ onSubmit }) {
         .cf2-textarea:focus { border-color: var(--primary); }
         .cf2-textarea--i:focus { border-color: var(--extra-indigo); }
 
-        /* error */
         .cf2-error {
           display: flex;
           align-items: center;
@@ -1015,7 +1100,6 @@ export default function CompareForm({ onSubmit }) {
           margin-bottom: 16px;
         }
 
-        /* submit */
         .cf2-submit {
           width: 100%;
           padding: 15px 24px;

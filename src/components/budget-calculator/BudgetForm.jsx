@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Sparkles, ArrowRight, AlertCircle } from "lucide-react";
-import { DESTINATIONS, COURSE_TYPES } from "../../data/budgetData";
+import { DESTINATIONS, COURSE_TYPES } from "../../Data/budgetdata";
 
 /* ─── Chip ─── */
 function Chip({ label, selected, onClick, wide }) {
